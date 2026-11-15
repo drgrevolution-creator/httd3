@@ -1,0 +1,6 @@
+# Không đẩy các file sau lên Apps Script (clasp push). Đường dẫn tính từ thư mục dự án.
+**/test/**
+**/*.test.js
+**/_moiTruong.js
+**/*.md
+**/node_modules/**

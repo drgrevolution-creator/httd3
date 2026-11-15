@@ -24,6 +24,19 @@ scripts/        Công cụ chạy từ máy người quản trị (kiểm tra AP
 docs/           Thiết kế, kế hoạch, tài liệu vận hành
 ```
 
+## Triển khai lần đầu (theo thứ tự)
+
+1. `docs/van-hanh/01-google-cloud-client-id.md` — tạo Client ID đăng nhập Google (miễn phí, không cần thẻ).
+2. `docs/van-hanh/02-trien-khai-apps-script.md` — đẩy mã lên Apps Script, chạy thiết lập lần đầu, lấy URL API.
+3. `docs/van-hanh/03-github-pages.md` — bật GitHub Pages cho thư mục `web/`.
+4. `docs/van-hanh/04-nghiem-thu-giai-doan-1.md` — bảng kiểm nghiệm thu.
+
+Kiểm tra nhanh bản API đã triển khai (chạy trên máy quản trị):
+
+```bash
+node scripts/kiem-tra-api.mjs "<URL .../exec>" quantri "<mật khẩu>"
+```
+
 ## Chạy kiểm thử
 
 ```bash
@@ -31,4 +44,11 @@ npm test        # lớp thuần
 npm run test:web   # giao diện (cần Playwright và Chromium)
 ```
 
-Không cần cài gói nào: chỉ dùng Node 22 trở lên.
+Không cần cài gói nào: chỉ dùng Node 22 trở lên (giao diện cần thêm Playwright và Chromium).
+
+## Quy ước mã
+
+- Mỗi file Apps Script là một đối tượng toàn cục cùng tên (`var SoDo = {...}`), chú thích tiếng Việt đầu mỗi hàm.
+- Lớp `gas/thuan/` không được gọi dịch vụ Google; mọi hàm mới ở đó phải có test trong `gas/test/`.
+- API một cửa: `{phien, action, duLieu}` → `{ok, duLieu}` hoặc `{ok:false, loi:{ma, thongBao}}`; bảng quyền ở `gas/thuan/PhanQuyen.gs`.
+- Không có bí mật trong kho: khóa và ID file nằm trong Script Properties của Apps Script.
