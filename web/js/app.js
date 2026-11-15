@@ -65,7 +65,8 @@ HTTD3.app = (function () {
     return api.goiApi('heThong.khoiDong', {}, { khongThuLai: true }).then(function (d) {
       trangThai.nguoiDung = d.nguoiDung; trangThai.vaiTro = (d.phien && d.phien.vaiTro) || (d.nguoiDung && d.nguoiDung.vaiTro) || []; trangThai.soDoDanhMuc = d.soDoDanhMuc || []; trangThai.cauHinh = d.cauHinh || {}; trangThai.daKhoiDong = true;
       api.luuNguoiDung(d.nguoiDung);
-      if (kqDangNhap && kqDangNhap.batBuocDoiMatKhau) { if (trangThai.nguoiDung) trangThai.nguoiDung.batBuocDoiMatKhau = true; ui.thongBao('Bạn đang dùng mật khẩu tạm, hãy đổi mật khẩu', 'thuong'); location.hash = '#/quan-tri'; }
+      var conMatKhauTam = (kqDangNhap && kqDangNhap.batBuocDoiMatKhau) || (d.phien && d.phien.batBuocDoiMatKhau);
+      if (conMatKhauTam) { if (trangThai.nguoiDung) trangThai.nguoiDung.batBuocDoiMatKhau = true; ui.thongBao('Bạn đang dùng mật khẩu tạm, hãy đổi mật khẩu', 'thuong'); location.hash = '#/quan-tri'; }
       else if (!location.hash || location.hash === '#/') location.hash = '#/hom-nay';
       dinhTuyen();
     }).catch(function (e) {
@@ -87,9 +88,10 @@ HTTD3.app = (function () {
     _hangDoiThuLai.push(ev.detail);
     if (document.querySelector('[data-test="tam-truot-dang-nhap"]')) return;
     var khung = el('div');
-    ui.moTamTruot('Đăng nhập lại', khung, { test: 'tam-truot-dang-nhap', khongDongKhiBamNen: true });
+    // Vẽ vào lớp phủ RIÊNG (#dang-nhap-lai) để biểu mẫu đang mở trong #tam-truot không bị xóa.
+    ui.moTamTruot('Đăng nhập lại', khung, { test: 'tam-truot-dang-nhap', khongDongKhiBamNen: true, goc: 'dang-nhap-lai' });
     HTTD3.dangNhap.veManDangNhap(khung, { gon: true, khiThanhCong: function () {
-      ui.dongTamTruot();
+      ui.dongTamTruot('dang-nhap-lai');
       var ds = _hangDoiThuLai.splice(0); ds.forEach(function (d) { d.thuLai(); });
     } });
   });

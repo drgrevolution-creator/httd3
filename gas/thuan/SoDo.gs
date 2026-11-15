@@ -168,7 +168,7 @@ var SoDo = (function () {
     c('laKyHienTai', 'Là kỳ hiện tại', 'boolean', { macDinh: false })
   ]);
   bang('DM_NguoiDung', DM, 'danhmuc', 'ND', 'SO-4', 'Người dùng', [
-    kc('maNguoiDung', 'Mã người dùng'), bb('tenDangNhap', 'Tên đăng nhập'), bb('hoTen', 'Họ tên'), bb('email', 'Email Google', 'email'),
+    kc('maNguoiDung', 'Mã người dùng'), bb('tenDangNhap', 'Tên đăng nhập'), bb('hoTen', 'Họ tên'), c('email', 'Email Google', 'email', { goiY: 'Để trống nếu người này không đăng nhập bằng Google' }),
     msOpt('vaiTro', 'Vai trò', ['QUANTRI', 'KIEMDUYET', 'CHUYENVIEN', 'DONVI', 'LANHDAO'], { batBuoc: true }),
     msRef('danhSachDonVi', 'Đơn vị, đầu mối đại diện', 'DM_DonVi'), msRef('linhVucPhuTrach', 'Lĩnh vực phụ trách', 'DM_LinhVuc'),
     c('matKhauBam', 'Mật khẩu (băm)', 'text', { an: true }), c('muoi', 'Muối', 'text', { an: true }), c('phienBanBam', 'Phiên bản băm', 'number', { an: true }),
@@ -273,7 +273,8 @@ var SoDo = (function () {
   ]);
   bang('PhienDangNhap', NK, 'nhatky', 'PH', 'TU_NHAP', 'Phiên đăng nhập', [
     kc('maPhien', 'Mã phiên'), c('maNguoiDung', 'Mã người dùng'), c('email', 'Email'), c('vaiTro', 'Vai trò', 'json'), c('danhSachDonVi', 'Đơn vị đại diện', 'json'),
-    c('hetHanLuc', 'Hết hạn lúc', 'datetime'), c('thietBi', 'Thiết bị'), sel('trangThaiPhien', 'Trạng thái phiên', ['hoatDong', 'thuHoi'], { macDinh: 'hoatDong' })
+    c('hetHanLuc', 'Hết hạn lúc', 'datetime'), c('thietBi', 'Thiết bị'), sel('trangThaiPhien', 'Trạng thái phiên', ['hoatDong', 'thuHoi'], { macDinh: 'hoatDong' }),
+    c('batBuocDoiMatKhau', 'Còn mật khẩu tạm', 'boolean', { macDinh: false })
   ]);
   bang('KiemTraToanVen', NK, 'nhatky', 'TV', 'TU_NHAP', 'Kiểm tra toàn vẹn', [
     kc('maKiemTra', 'Mã'), c('thoiGian', 'Thời gian', 'datetime'), c('quanHe', 'Quan hệ'), c('bang', 'Bảng'), c('ma', 'Mã bản ghi'), c('giaTriHienTai', 'Giá trị hiện tại'), c('giaTriDung', 'Giá trị đúng'),

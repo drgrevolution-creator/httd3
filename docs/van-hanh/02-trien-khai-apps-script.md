@@ -32,14 +32,14 @@ Mỗi lần Claude cập nhật mã trên GitHub, bạn chỉ cần: `git pull` 
 
 ## Phần 2B. Dán tay (không dùng clasp)
 
-Trong trang Apps Script, với **từng file** trong thư mục `gas/` của kho mã: bấm **+** cạnh "Files" → **Script** → đặt tên đúng (ví dụ `thuan/SoDo`, bỏ đuôi `.gs`) → xóa nội dung mặc định → dán toàn bộ nội dung file → Ctrl+S. Riêng `appsscript.json`: mở file manifest có sẵn, thay toàn bộ bằng nội dung trong kho. **Không** dán các file trong `gas/test/`.
+Trong trang Apps Script, với **từng file** trong thư mục `gas/` của kho mã, **theo đúng thứ tự trong `filePushOrder` của `.clasp.json`** (các file `thuan/` trước, rồi `ketnoi/KhoDuLieu`, rồi các file `ketnoi/` còn lại, cuối cùng `Main`): bấm **+** cạnh "Files" → **Script** → đặt tên đúng (ví dụ `thuan/SoDo`, bỏ đuôi `.gs`) → xóa nội dung mặc định → dán toàn bộ nội dung file → Ctrl+S. Riêng `appsscript.json`: mở file manifest có sẵn, thay toàn bộ bằng nội dung trong kho. **Không** dán các file trong `gas/test/`.
 
 ## Phần 3. Chạy thiết lập lần đầu
 
 1. Trong trang Apps Script, ở thanh công cụ chọn file `ketnoi/ThietLap`, ô chọn hàm (cạnh nút Run) chọn **chayThietLapLanDau**.
 2. Bấm **Run**. Lần đầu Google hỏi quyền: **Review permissions** → chọn Gmail → nếu hiện "Google hasn't verified this app": bấm **Advanced** → **Go to HTTD3 API (unsafe)** → **Allow**. (Đây là ứng dụng của chính bạn, chạy trên tài khoản của bạn.)
 3. Đợi 1–2 phút. Mở **Execution log** (dưới cùng). Phải thấy các dòng: thư mục Drive, ba file, gieo danh mục, và dòng **MẬT KHẨU TẠM (chỉ hiện một lần)** của tài khoản `quantri`. **Chép mật khẩu này ra giấy ngay.**
-4. Vào Google Drive: có thư mục `HTTD3` chứa `HTTD3_DanhMuc`, `HTTD3_DuLieu`, `HTTD3_NhatKy` và các thư mục con.
+4. Vào Google Drive: có thư mục `HTTD3` chứa `HTTD3_DanhMuc`, `HTTD3_DuLieu`, `HTTD3_NhatKy` và các thư mục con. Mở `HTTD3_DuLieu` → sheet `NhiemVu`: dòng 1 phải có đủ 47 cột tiêu đề (cột cuối `tinhTrang`).
 5. Kiểm tra: chọn hàm **chayKiemTraThietLap** → Run → log phải in `{"thieu":[]}`. Nếu thiếu `GOOGLE_CLIENT_ID`, thêm ở Script Properties rồi chạy lại.
 
 Chạy lại `chayThietLapLanDau` là an toàn: hàm chỉ tạo phần còn thiếu, không ghi đè dữ liệu, không tạo lại tài khoản.

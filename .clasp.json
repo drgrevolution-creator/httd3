@@ -1,4 +1,24 @@
 {
   "scriptId": "DIEN_SAU_KHI_TAO",
-  "rootDir": "gas"
+  "rootDir": "gas",
+  "filePushOrder": [
+    "thuan/Bang.gs",
+    "thuan/DieuPhoi.gs",
+    "thuan/DuLieuGieo.gs",
+    "thuan/MaSo.gs",
+    "thuan/MatKhau.gs",
+    "thuan/NhatKy.gs",
+    "thuan/PhanQuyen.gs",
+    "thuan/Phien.gs",
+    "thuan/SaoLuu.gs",
+    "thuan/SoDo.gs",
+    "thuan/ThoiGian.gs",
+    "thuan/ToanVen.gs",
+    "ketnoi/KhoDuLieu.gs",
+    "ketnoi/XacThuc.gs",
+    "ketnoi/DanhMucGas.gs",
+    "ketnoi/LichDem.gs",
+    "ketnoi/ThietLap.gs",
+    "Main.gs"
+  ]
 }

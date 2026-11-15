@@ -70,10 +70,10 @@ export function khoiDong({ cong = 0 } = {}) {
       const u = timND((x) => x.maNguoiDung === p.maNguoiDung);
       if (u.matKhau && u.matKhau !== d.matKhauCu) loi('KHONG_CO_QUYEN', 'Mật khẩu cũ không đúng');
       const yc = T.MatKhau.datYeuCau(d.matKhauMoi); if (!yc.hopLe) loi('DU_LIEU_KHONG_HOP_LE', yc.loi.join('; '));
-      u.matKhau = d.matKhauMoi; u.batBuocDoiMatKhau = false; ghiNK(p, 'DOI_MAT_KHAU', 'DM_NguoiDung', u.maNguoiDung); return { daDoi: true };
+      u.matKhau = d.matKhauMoi; u.batBuocDoiMatKhau = false; p.batBuocDoiMatKhau = false; for (const k of Object.keys(phien)) if (phien[k].maNguoiDung === u.maNguoiDung && k !== p.maPhien) delete phien[k]; ghiNK(p, 'DOI_MAT_KHAU', 'DM_NguoiDung', u.maNguoiDung); return { daDoi: true };
     },
     'heThong.khoiDong': (d, p) => ({
-      nguoiDung: anND(timND((x) => x.maNguoiDung === p.maNguoiDung)), phien: { maPhien: p.maPhien, hetHanLuc: p.hetHanLuc, vaiTro: p.vaiTro, danhSachDonVi: p.danhSachDonVi },
+      nguoiDung: anND(timND((x) => x.maNguoiDung === p.maNguoiDung)), phien: { maPhien: p.maPhien, hetHanLuc: p.hetHanLuc, vaiTro: p.vaiTro, danhSachDonVi: p.danhSachDonVi, batBuocDoiMatKhau: !!p.batBuocDoiMatKhau },
       soDoDanhMuc: SoDo.danhSachBang('danhmuc').map((t) => ({ bang: t, ten: SoDo.BANG[t].ten, tienToMa: SoDo.BANG[t].tienToMa, dinhDangMa: SoDo.BANG[t].dinhDangMa, khoaChinh: SoDo.khoaChinh(t), cot: SoDo.BANG[t].cot.filter((c) => !c.an) })),
       cauHinh: Object.fromEntries(kho.CauHinh.map((c) => [c.khoa, c.giaTri]))
     }),

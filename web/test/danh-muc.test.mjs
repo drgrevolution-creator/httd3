@@ -94,3 +94,27 @@ test('trên 1280 px bảng có cột mã cố định khi cuộn ngang; trên 36
     await page.waitForSelector('[data-test="bang"] tr[data-ma="CCHC"]');
   } finally { await dong(); }
 });
+
+test('hết hạn phiên đúng lúc bấm Lưu trong tấm trượt: biểu mẫu còn nguyên, máy chủ báo lỗi sau đăng nhập lại vẫn thấy dữ liệu', async () => {
+  const { page, url, dong } = await moi({ width: 1280, height: 800 });
+  try {
+    await dangNhapMatKhau(page, url); await page.waitForSelector('[data-test="man-hom-nay"]');
+    await page.goto(url + '/#/danh-muc'); await page.waitForSelector('[data-test="man-danh-muc"]');
+    await page.click('[data-test="chon-bang-DM_LinhVuc"]'); await page.waitForSelector('[data-test="bang"] tr[data-ma="CCHC"]');
+    await page.click('[data-test="nut-them"]'); await page.waitForSelector('[data-test="tam-truot"] form');
+    await page.fill('[data-test="o-maLinhVuc"]', 'CCHC');            // mã đã tồn tại → máy chủ sẽ báo lỗi
+    await page.fill('[data-test="o-tenLinhVuc"]', 'Trùng mã thử');
+    await page.evaluate(() => localStorage.setItem('httd3.phien', 'het'));
+    await page.click('[data-test="nut-luu"]');
+    await page.waitForSelector('[data-test="tam-truot-dang-nhap"]');
+    assert.equal(await page.inputValue('[data-test="o-tenLinhVuc"]'), 'Trùng mã thử', 'biểu mẫu phải còn trong trang khi đăng nhập lại');
+    await page.fill('[data-test="tam-truot-dang-nhap"] [data-test="ten-dang-nhap"]', 'quantri');
+    await page.fill('[data-test="tam-truot-dang-nhap"] [data-test="mat-khau"]', 'Abc12345');
+    await page.click('[data-test="tam-truot-dang-nhap"] [data-test="nut-dang-nhap"]');
+    await page.waitForFunction(() => /đã tồn tại/.test(document.querySelector('[data-test="thong-bao"]')?.textContent || ''));
+    assert.equal(await page.inputValue('[data-test="o-tenLinhVuc"]'), 'Trùng mã thử', 'dữ liệu đã gõ phải còn nguyên sau lỗi');
+    await page.fill('[data-test="o-maLinhVuc"]', 'CCHC2');
+    await page.click('[data-test="nut-luu"]');
+    await page.waitForSelector('[data-test="bang"] tr[data-ma="CCHC2"]');
+  } finally { await dong(); }
+});

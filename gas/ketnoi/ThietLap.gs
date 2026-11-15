@@ -8,7 +8,8 @@
  *   3. Đọc Execution log: mật khẩu tạm của tài khoản 'quantri' in ra MỘT LẦN.
  */
 var ThietLap = (function () {
-  var _loi = KhoDuLieu._loi;
+  // Tham chiếu LƯỜI tới KhoDuLieu: Apps Script nạp file theo thứ tự tên, KhoDuLieu có thể chưa tồn tại lúc file này nạp.
+  function _loi(ma, thongBao, chiTiet) { return KhoDuLieu._loi(ma, thongBao, chiTiet); }
   var KIEU_CHU = { text: 1, textarea: 1, email: 1, json: 1, multiselect: 1, date: 1, datetime: 1, select: 1, ref: 1 };
   function _props() { return PropertiesService.getScriptProperties(); }
 
@@ -20,6 +21,7 @@ var ThietLap = (function () {
     var sh = ss.getSheetByName(tenBang), moi = false;
     if (!sh) { sh = ss.insertSheet(tenBang); moi = true; }
     var cot = SoDo.BANG[tenBang].cot, td = Bang.dongTieuDe(tenBang);
+    if (sh.getMaxColumns() < cot.length) sh.insertColumnsAfter(sh.getMaxColumns(), cot.length - sh.getMaxColumns());  // sheet mới chỉ có 26 cột
     sh.getRange(1, 1, 2, cot.length).setValues(td);
     sh.getRange(1, 1, 1, cot.length).setFontWeight('bold').setBackground('#e8eaed');
     sh.getRange(2, 1, 1, cot.length).setFontStyle('italic').setFontColor('#5f6368');
@@ -41,7 +43,7 @@ var ThietLap = (function () {
     var cacBang = SoDo.danhSachBang().filter(function (t) { return SoDo.BANG[t].file === tenFile; });
     cacBang.forEach(function (t) { _taoSheet(ss, t); });
     // Xóa sheet mặc định "Sheet1"/"Trang tính1" nếu còn và không phải bảng
-    ss.getSheets().forEach(function (s) { if (cacBang.indexOf(s.getName()) < 0 && ss.getSheets().length > 1) ss.deleteSheet(s); });
+    ss.getSheets().forEach(function (s) { if (/^(Sheet1|Trang tính1)$/.test(s.getName()) && s.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(s); });
     return ss;
   }
 

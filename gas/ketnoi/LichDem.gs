@@ -2,7 +2,8 @@
  * LichDem — việc chạy theo lịch: sao lưu 01:00, kiểm tra toàn vẹn 02:00, và cài đặt lịch.
  */
 var LichDem = (function () {
-  var _loi = KhoDuLieu._loi;
+  // Tham chiếu LƯỜI tới KhoDuLieu: Apps Script nạp file theo thứ tự tên, KhoDuLieu có thể chưa tồn tại lúc file này nạp.
+  function _loi(ma, thongBao, chiTiet) { return KhoDuLieu._loi(ma, thongBao, chiTiet); }
   var TEN_HAM_SAO_LUU = 'saoLuuHangDem', TEN_HAM_TOAN_VEN = 'kiemTraToanVenHangDem';
 
   function _props() { return PropertiesService.getScriptProperties(); }
@@ -21,7 +22,12 @@ var LichDem = (function () {
 
   // Sao lưu ba file Sheets vào HTTD3/SaoLuu, dọn bản cũ theo quy tắc SaoLuu.canXoa. Trả danh sách kết quả.
   function saoLuuHangDem() {
-    var kq = [], homNay = KhoDuLieu.bayGioIso(), thuMuc = _thuMuc('ID_THU_MUC_SAO_LUU');
+    var kq = [], homNay = KhoDuLieu.bayGioIso(), thuMuc = null;
+    try { thuMuc = _thuMuc('ID_THU_MUC_SAO_LUU'); } catch (e) {
+      SoDo.FILE.forEach(function (ten) { var d = { thoiGian: homNay, tenFileGoc: ten, tenFileSaoLuu: '', fileId: '', ketQua: 'LOI', ghiChu: 'Không mở được thư mục sao lưu: ' + (e.thongBao || e.message) }; KhoDuLieu.themDongThang('SaoLuu', d); kq.push(d); });
+      _baoQuanTri('Sao lưu đêm thất bại: không mở được thư mục sao lưu', String(e.thongBao || e.message));
+      return kq;
+    }
     SoDo.FILE.forEach(function (ten) {
       var dong = { thoiGian: homNay, tenFileGoc: ten, tenFileSaoLuu: SaoLuu.tenFile(ten, homNay), fileId: '', ketQua: 'OK', ghiChu: '' };
       try {

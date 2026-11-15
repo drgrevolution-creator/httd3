@@ -18,7 +18,8 @@ var Phien = (function () {
     return {
       maPhien: taoMa(o.ngauNhienHex32), maNguoiDung: nd.maNguoiDung, email: nd.email,
       vaiTro: (nd.vaiTro || []).slice(), danhSachDonVi: (nd.danhSachDonVi || []).slice(),
-      taoLuc: o.bayGioIso, hetHanLuc: ThoiGian.cong(o.bayGioIso, HAN_MS), thietBi: o.thietBi || '', trangThaiPhien: 'hoatDong'
+      taoLuc: o.bayGioIso, hetHanLuc: ThoiGian.cong(o.bayGioIso, HAN_MS), thietBi: o.thietBi || '', trangThaiPhien: 'hoatDong',
+      batBuocDoiMatKhau: !!nd.batBuocDoiMatKhau
     };
   }
 
