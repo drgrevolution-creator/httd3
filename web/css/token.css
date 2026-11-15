@@ -1,0 +1,65 @@
+/* HTTD 3.0 — token thiết kế ba tầng (gốc → ngữ nghĩa → thành phần). Theo bản thiết kế §9.2. */
+:root {
+  /* Tầng gốc */
+  --blue-50: #eff6ff; --blue-100: #dbeafe; --blue-600: #2563eb; --blue-700: #1d4ed8;
+  --gray-50: #f9fafb; --gray-100: #f3f4f6; --gray-200: #e5e7eb; --gray-300: #d1d5db; --gray-400: #9ca3af;
+  --gray-500: #6b7280; --gray-600: #4b5563; --gray-700: #374151; --gray-800: #1f2937; --gray-900: #111827;
+  --red-50: #fef2f2; --red-600: #dc2626; --red-700: #b91c1c;
+  --amber-50: #fffbeb; --amber-600: #d97706;
+  --green-50: #f0fdf4; --green-600: #16a34a;
+  --violet-50: #f5f3ff; --violet-600: #7c3aed;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-7: 32px; --space-8: 40px;
+  --font-size-xs: 12px; --font-size-sm: 14px; --font-size-md: 16px; --font-size-lg: 20px; --font-size-xl: 24px;
+  --font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --radius-sm: 6px; --radius-md: 10px; --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px rgba(17, 24, 39, 0.06); --shadow-md: 0 6px 20px rgba(17, 24, 39, 0.12);
+  --motion-fast: 120ms; --motion-base: 200ms;
+
+  /* Tầng ngữ nghĩa */
+  --color-bg-page: var(--gray-50);
+  --color-bg-surface: #ffffff;
+  --color-bg-subtle: var(--gray-100);
+  --color-bg-nav: #ffffff;
+  --color-text-primary: var(--gray-900);
+  --color-text-secondary: var(--gray-600);
+  --color-text-tertiary: var(--gray-500);
+  --color-text-inverse: #ffffff;
+  --color-action-primary: var(--blue-600);
+  --color-action-primary-hover: var(--blue-700);
+  --color-action-danger: var(--red-600);
+  --color-border-default: var(--gray-200);
+  --color-border-strong: var(--gray-300);
+  --color-border-focus: var(--blue-600);
+  --color-status-overdue: var(--red-600);   --color-status-overdue-bg: var(--red-50);
+  --color-status-due-soon: var(--amber-600); --color-status-due-soon-bg: var(--amber-50);
+  --color-status-done: var(--green-600);     --color-status-done-bg: var(--green-50);
+  --color-status-pending: var(--gray-500);   --color-status-pending-bg: var(--gray-100);
+  --color-status-claude: var(--violet-600);  --color-status-claude-bg: var(--violet-50);
+
+  /* Tầng thành phần */
+  --nut-chieu-cao: 44px;
+  --o-nhap-chieu-cao: 44px;
+  --the-dem: var(--space-4);
+  --dieu-huong-cao: 60px;
+  --dieu-huong-rong: 240px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg-page: #0b1220; --color-bg-surface: #111827; --color-bg-subtle: #1f2937; --color-bg-nav: #0f172a;
+    --color-text-primary: #f9fafb; --color-text-secondary: #d1d5db; --color-text-tertiary: #9ca3af;
+    --color-action-primary: #3b82f6; --color-action-primary-hover: #60a5fa;
+    --color-border-default: #273449; --color-border-strong: #374151;
+    --color-status-overdue-bg: rgba(220, 38, 38, 0.18); --color-status-due-soon-bg: rgba(217, 119, 6, 0.18);
+    --color-status-done-bg: rgba(22, 163, 74, 0.18); --color-status-pending-bg: rgba(107, 114, 128, 0.2); --color-status-claude-bg: rgba(124, 58, 237, 0.2);
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4); --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+  }
+}
+:root[data-theme="dark"] {
+  --color-bg-page: #0b1220; --color-bg-surface: #111827; --color-bg-subtle: #1f2937; --color-bg-nav: #0f172a;
+  --color-text-primary: #f9fafb; --color-text-secondary: #d1d5db; --color-text-tertiary: #9ca3af;
+  --color-action-primary: #3b82f6; --color-action-primary-hover: #60a5fa;
+  --color-border-default: #273449; --color-border-strong: #374151;
+  --color-status-overdue-bg: rgba(220, 38, 38, 0.18); --color-status-due-soon-bg: rgba(217, 119, 6, 0.18);
+  --color-status-done-bg: rgba(22, 163, 74, 0.18); --color-status-pending-bg: rgba(107, 114, 128, 0.2); --color-status-claude-bg: rgba(124, 58, 237, 0.2);
+}
