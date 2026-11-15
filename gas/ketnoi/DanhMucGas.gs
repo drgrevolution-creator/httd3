@@ -2,7 +2,8 @@
  * DanhMucGas — handler danh mục chung, người dùng và nhật ký.
  */
 var DanhMucGas = (function () {
-  var _loi = KhoDuLieu._loi;
+  // Tham chiếu LƯỜI tới KhoDuLieu: Apps Script nạp file theo thứ tự tên, KhoDuLieu có thể chưa tồn tại lúc file này nạp.
+  function _loi(ma, thongBao, chiTiet) { return KhoDuLieu._loi(ma, thongBao, chiTiet); }
   var COT_KHONG_NHAN = { taoLuc: 1, taoBoi: 1, capNhatLuc: 1, capNhatBoi: 1, tinhTrang: 1, matKhauBam: 1, muoi: 1, phienBanBam: 1, soLanSai: 1, khoaDen: 1, lanDangNhapCuoi: 1, __dong: 1 };
 
   // Chỉ cho phép bảng nhóm danh mục; người dùng đi qua nguoiDung.*
@@ -53,7 +54,9 @@ var DanhMucGas = (function () {
     var td = _loc(d.thayDoi); delete td.maNguoiDung;
     if (td.email !== undefined) td.email = String(td.email).trim().toLowerCase();
     _kiemTrung(td, d.ma);
-    return Bang.anCotNhayCam('DM_NguoiDung', KhoDuLieu.capNhatDong('DM_NguoiDung', d.ma, td, phien, d.canCu || 'quản trị sửa'));
+    var kq = KhoDuLieu.capNhatDong('DM_NguoiDung', d.ma, td, phien, d.canCu || 'quản trị sửa');
+    if (td.trangThai === 'Khóa') XacThuc.thuHoiMoiPhien(d.ma, phien);   // §10: khóa tài khoản thu hồi mọi phiên
+    return Bang.anCotNhayCam('DM_NguoiDung', kq);
   }
   function nguoiDungDatLaiMatKhau(d, phien) { return { matKhauTam: XacThuc.datMatKhauTam(d.ma, phien, d.lyDo) }; }
 
@@ -62,7 +65,8 @@ var DanhMucGas = (function () {
     var ds = KhoDuLieu.docBang('NhatKy', { baoGomXoaMem: true });
     if (d.bang) ds = ds.filter(function (r) { return r.bang === d.bang; });
     if (d.ma) ds = ds.filter(function (r) { return String(r.ma) === String(d.ma); });
-    ds.sort(function (a, b) { return String(b.thoiGian).localeCompare(String(a.thoiGian)); });
+    // Mới nhất trước; cùng thời điểm (ghi trong cùng giây) thì dòng ghi sau đứng trước.
+    ds.sort(function (a, b) { var c = String(b.thoiGian).localeCompare(String(a.thoiGian)); return c !== 0 ? c : (b.__dong || 0) - (a.__dong || 0); });
     return ds.slice(0, Math.min(Number(d.gioiHan) || 200, 1000)).map(function (r) { var o = Object.assign({}, r); delete o.__dong; return o; });
   }
 

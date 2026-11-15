@@ -22,4 +22,20 @@ function taiThuan() {
   return ctx;
 }
 
-module.exports = { taiThuan };
+
+// Nạp TOÀN BỘ mã Apps Script (Main.gs, ketnoi/*, thuan/*) vào một ngữ cảnh vm riêng, đúng THỨ TỰ ASCII của đường dẫn
+// như clasp đẩy lên (Main.gs < ketnoi/... < thuan/...), với dịch vụ Google giả lập. Dùng để bắt lỗi lúc nạp và chạy lớp kết nối.
+function taiTatCa(tuyChon) {
+  const { taoDichVuGia } = require('./_gia');
+  const gia = taoDichVuGia(tuyChon);
+  const ctx = vm.createContext(Object.assign({}, gia.G));
+  const goc = path.join(__dirname, '..');
+  const ds = [];
+  (function quet(d, rel) { fs.readdirSync(d, { withFileTypes: true }).forEach((e) => { if (e.name === 'test') return; const r = rel ? rel + '/' + e.name : e.name; if (e.isDirectory()) quet(path.join(d, e.name), r); else if (e.name.endsWith('.gs')) ds.push(r); }); })(goc, '');
+  ds.sort();
+  for (const f of ds) vm.runInContext(fs.readFileSync(path.join(goc, f), 'utf8'), ctx, { filename: f });
+  ctx.__daNap = ds; ctx.__gia = gia.trangThai;
+  return ctx;
+}
+
+module.exports = { taiThuan, taiTatCa };

@@ -4,7 +4,8 @@
 var XacThuc = (function () {
   var TOKENINFO = 'https://oauth2.googleapis.com/tokeninfo?id_token=';
   var GIAY_CACHE = 21600; // 6 giờ, tối đa của CacheService
-  var _loi = KhoDuLieu._loi;
+  // Tham chiếu LƯỜI tới KhoDuLieu: Apps Script nạp file theo thứ tự tên, KhoDuLieu có thể chưa tồn tại lúc file này nạp.
+  function _loi(ma, thongBao, chiTiet) { return KhoDuLieu._loi(ma, thongBao, chiTiet); }
 
   // SHA-256 dạng hex bằng Utilities (tiêm vào lớp thuần MatKhau).
   function sha256Hex(s) {
@@ -39,6 +40,16 @@ var XacThuc = (function () {
   }
   function _phienCuaNguoi(maNguoiDung) {
     return KhoDuLieu.docBang('PhienDangNhap').filter(function (p) { return p.maNguoiDung === maNguoiDung && p.trangThaiPhien === 'hoatDong'; });
+  }
+  // Thu hồi mọi phiên đang hoạt động của một người, trừ mã phiên truMaPhien (nếu có).
+  function thuHoiMoiPhien(maNguoiDung, phienThucHien, truMaPhien) {
+    _phienCuaNguoi(maNguoiDung).forEach(function (p) { if (p.maPhien !== truMaPhien) _thuHoiPhien(p.maPhien, phienThucHien); });
+  }
+  // Cập nhật một phần bản ghi phiên (sheet + cache).
+  function _capNhatPhien(maPhien, thayDoi, phienThucHien) {
+    var p = KhoDuLieu.capNhatDong('PhienDangNhap', maPhien, thayDoi, phienThucHien, 'cập nhật phiên', { hanhDong: 'KHAC' });
+    _cache().put(_khoaCache(maPhien), JSON.stringify(p), GIAY_CACHE);
+    return p;
   }
 
   function _timNguoiDung(ham) { return KhoDuLieu.docBang('DM_NguoiDung').filter(ham)[0] || null; }
@@ -103,6 +114,8 @@ var XacThuc = (function () {
     if (!yc.hopLe) throw _loi('DU_LIEU_KHONG_HOP_LE', yc.loi.join('; '));
     var muoi = ngauNhienHex32();
     KhoDuLieu.capNhatDong('DM_NguoiDung', nd.maNguoiDung, { matKhauBam: MatKhau.bam(d.matKhauMoi, muoi, sha256Hex), muoi: muoi, phienBanBam: 2, batBuocDoiMatKhau: false }, phien, 'người dùng tự đổi', { hanhDong: 'DOI_MAT_KHAU' });
+    thuHoiMoiPhien(nd.maNguoiDung, phien, phien.maPhien);      // §10: đổi mật khẩu thu hồi các phiên khác
+    if (phien.batBuocDoiMatKhau) _capNhatPhien(phien.maPhien, { batBuocDoiMatKhau: false }, phien);
     return { daDoi: true };
   }
 
@@ -110,7 +123,7 @@ var XacThuc = (function () {
   function datMatKhauTam(maNguoiDung, phien, lyDo) {
     var tam = taoMatKhauTam(), muoi = ngauNhienHex32();
     KhoDuLieu.capNhatDong('DM_NguoiDung', maNguoiDung, { matKhauBam: MatKhau.bam(tam, muoi, sha256Hex), muoi: muoi, phienBanBam: 2, batBuocDoiMatKhau: true, soLanSai: 0, khoaDen: '' }, phien, lyDo || 'đặt lại mật khẩu', { hanhDong: 'DAT_LAI_MAT_KHAU' });
-    _phienCuaNguoi(maNguoiDung).forEach(function (p) { _thuHoiPhien(p.maPhien, phien); });
+    thuHoiMoiPhien(maNguoiDung, phien);
     return tam;
   }
 
@@ -121,7 +134,7 @@ var XacThuc = (function () {
       var b = SoDo.BANG[t];
       return { bang: t, ten: b.ten, tienToMa: b.tienToMa, dinhDangMa: b.dinhDangMa, khoaChinh: SoDo.khoaChinh(t), cot: b.cot.filter(function (c) { return !c.an; }) };
     });
-    return { nguoiDung: nd ? _anNguoiDung(nd) : null, phien: { maPhien: phien.maPhien, hetHanLuc: phien.hetHanLuc, vaiTro: phien.vaiTro, danhSachDonVi: phien.danhSachDonVi }, soDoDanhMuc: soDo, cauHinh: KhoDuLieu.docCauHinh() };
+    return { nguoiDung: nd ? _anNguoiDung(nd) : null, phien: { maPhien: phien.maPhien, hetHanLuc: phien.hetHanLuc, vaiTro: phien.vaiTro, danhSachDonVi: phien.danhSachDonVi, batBuocDoiMatKhau: !!phien.batBuocDoiMatKhau }, soDoDanhMuc: soDo, cauHinh: KhoDuLieu.docCauHinh() };
   }
 
   // Sức khỏe hệ thống; không ném lỗi khi chưa thiết lập.
@@ -140,5 +153,5 @@ var XacThuc = (function () {
     'xacThuc.dangNhapGoogle': dangNhapGoogle, 'xacThuc.dangNhapMatKhau': dangNhapMatKhau, 'xacThuc.dangXuat': dangXuat, 'xacThuc.doiMatKhau': doiMatKhau,
     'heThong.khoiDong': khoiDong, 'heThong.sucKhoe': sucKhoe
   };
-  return { HANDLERS: HANDLERS, layPhien: layPhien, sha256Hex: sha256Hex, ngauNhienHex32: ngauNhienHex32, taoMatKhauTam: taoMatKhauTam, datMatKhauTam: datMatKhauTam };
+  return { HANDLERS: HANDLERS, layPhien: layPhien, sha256Hex: sha256Hex, ngauNhienHex32: ngauNhienHex32, taoMatKhauTam: taoMatKhauTam, datMatKhauTam: datMatKhauTam, thuHoiMoiPhien: thuHoiMoiPhien };
 })();

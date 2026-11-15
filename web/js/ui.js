@@ -33,19 +33,20 @@ HTTD3.ui = (function () {
 
   // Tấm trượt: phải trên máy tính, toàn màn trên điện thoại. Trả phần tử nội dung.
   function moTamTruot(tieuDe, phanTu, tuyChon) {
-    var goc = document.getElementById('tam-truot');
+    var goc = document.getElementById((tuyChon && tuyChon.goc) || 'tam-truot');
     goc.innerHTML = '';
     var noi = el('div', { class: 'noi', role: 'dialog', 'aria-modal': 'true', 'aria-label': tieuDe, 'data-test': (tuyChon && tuyChon.test) || 'tam-truot' }, [
-      el('div', { class: 'dau' }, [el('h2', { text: tieuDe }), el('button', { type: 'button', class: 'nut nut-phu nut-bieu-tuong', 'aria-label': 'Đóng', text: '×', onclick: dongTamTruot })]),
+      el('div', { class: 'dau' }, [el('h2', { text: tieuDe }), el('button', { type: 'button', class: 'nut nut-phu nut-bieu-tuong', 'aria-label': 'Đóng', text: '×', onclick: function () { dongTamTruot(goc.id); } })]),
       phanTu
     ]);
     goc.appendChild(noi);
     goc.hidden = false;
-    goc.onclick = function (ev) { if (ev.target === goc && !(tuyChon && tuyChon.khongDongKhiBamNen)) dongTamTruot(); };
+    goc.onclick = function (ev) { if (ev.target === goc && !(tuyChon && tuyChon.khongDongKhiBamNen)) dongTamTruot(goc.id); };
     var oDau = noi.querySelector('input, select, textarea, button.nut-chinh'); if (oDau) setTimeout(function () { oDau.focus(); }, 50);
     return noi;
   }
-  function dongTamTruot() { var goc = document.getElementById('tam-truot'); goc.hidden = true; goc.innerHTML = ''; }
+  // Đóng tấm trượt (mặc định #tam-truot; truyền id để đóng lớp phủ khác như #dang-nhap-lai).
+  function dongTamTruot(id) { var goc = document.getElementById(id || 'tam-truot'); if (goc) { goc.hidden = true; goc.innerHTML = ''; } }
 
   // Hiển thị một giá trị theo kiểu cột.
   function hienThi(c, v, thamChieu) {

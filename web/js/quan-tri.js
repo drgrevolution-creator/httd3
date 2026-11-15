@@ -13,7 +13,7 @@ HTTD3.quanTri = (function () {
       ev.preventDefault();
       if (oMoi.value !== oLai.value) { ui.thongBao('Mật khẩu nhập lại chưa khớp', 'loi'); oLai.focus(); return; }
       ui.ban(nut, api.goiApi('xacThuc.doiMatKhau', { matKhauCu: oCu.value, matKhauMoi: oMoi.value })
-        .then(function () { ui.thongBao('Đã đổi mật khẩu', 'thanh-cong'); form.reset(); if (nd) { nd.batBuocDoiMatKhau = false; api.luuNguoiDung(nd); } })
+        .then(function () { ui.thongBao('Đã đổi mật khẩu', 'thanh-cong'); form.reset(); if (nd) { nd.batBuocDoiMatKhau = false; api.luuNguoiDung(nd); } var nhac = document.querySelector('[data-test="nhac-doi-mat-khau"]'); if (nhac) nhac.remove(); })
         .catch(function (e) { ui.thongBao(e.message, 'loi'); }));
     } }, [
       el('div', { class: 'truong' }, [el('label', { for: 'mk-cu', text: 'Mật khẩu hiện tại' }), oCu, el('div', { class: 'goi-y', text: 'Tài khoản mới đăng nhập Google lần đầu: để trống' })]),

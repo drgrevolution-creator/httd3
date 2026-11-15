@@ -54,3 +54,20 @@ test('yêu cầu thiếu action hoặc không phải đối tượng', () => {
   assert.equal(DieuPhoi.xuLy(null, nc).loi.ma, 'DU_LIEU_KHONG_HOP_LE');
   assert.equal(DieuPhoi.xuLy({}, nc).loi.ma, 'DU_LIEU_KHONG_HOP_LE');
 });
+
+test('lỗi hệ thống được ghi console.error kèm action để chẩn đoán trên Execution log', () => {
+  const { DieuPhoi } = taiThuan();
+  const daGhi = []; const cu = console.error; console.error = (...a) => daGhi.push(a.join(' '));
+  try { DieuPhoi.xuLy({ action: 'heThong.sucKhoe' }, { handlers: { 'heThong.sucKhoe': () => { throw new TypeError('sheet thiếu cột'); } }, layPhien: () => null, bayGioIso: GIO }); }
+  finally { console.error = cu; }
+  assert.equal(daGhi.length, 1); assert.match(daGhi[0], /heThong\.sucKhoe/); assert.match(daGhi[0], /sheet thiếu cột/);
+});
+
+test('phiên còn mật khẩu tạm chỉ được đổi mật khẩu, đăng xuất, khởi động, sức khỏe', () => {
+  const { DieuPhoi } = taiThuan();
+  const nc = { handlers: { 'danhMuc.doc': () => [], 'xacThuc.doiMatKhau': () => ({ daDoi: true }), 'heThong.khoiDong': () => ({}) }, layPhien: () => ({ hetHanLuc: '2026-11-15T20:00:00+07:00', trangThaiPhien: 'hoatDong', vaiTro: ['QUANTRI'], batBuocDoiMatKhau: true }), bayGioIso: GIO };
+  const r = DieuPhoi.xuLy({ action: 'danhMuc.doc', phien: 'p', duLieu: {} }, nc);
+  assert.equal(r.loi.ma, 'KHONG_CO_QUYEN'); assert.match(r.loi.thongBao, /đổi mật khẩu/);
+  assert.equal(DieuPhoi.xuLy({ action: 'xacThuc.doiMatKhau', phien: 'p', duLieu: {} }, nc).ok, true);
+  assert.equal(DieuPhoi.xuLy({ action: 'heThong.khoiDong', phien: 'p', duLieu: {} }, nc).ok, true);
+});

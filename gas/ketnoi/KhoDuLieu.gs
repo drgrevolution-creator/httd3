@@ -26,11 +26,14 @@ var KhoDuLieu = (function () {
   // Thời điểm hiện tại dạng ISO +07:00.
   function bayGioIso() { return ThoiGian.tuMs(Date.now()); }
 
-  // Chạy fn dưới khóa toàn cục 30 giây.
+  // Chạy fn dưới khóa toàn cục 30 giây. Tái nhập được: nếu lần chạy này đang giữ khóa thì chạy thẳng.
+  var _dangGiuKhoa = false;
   function khoa(fn) {
+    if (_dangGiuKhoa) return fn();
     var lock = LockService.getScriptLock();
     if (!lock.tryLock(30000)) throw _loi('HE_THONG_BAN', 'Hệ thống đang bận, vui lòng thử lại sau ít giây');
-    try { return fn(); } finally { lock.releaseLock(); }
+    _dangGiuKhoa = true;
+    try { return fn(); } finally { _dangGiuKhoa = false; lock.releaseLock(); }
   }
 
   // Đọc toàn bộ bản ghi của bảng (cache trong một lần chạy). tuyChon.baoGomXoaMem = true để lấy cả bản ghi xóa mềm.
@@ -85,16 +88,18 @@ var KhoDuLieu = (function () {
     return SoDo.BANG[tenBang].tienToMa + '-' + t + '-' + Utilities.getUuid().slice(0, 4);
   }
 
-  // Thêm dòng không khóa, không kiểm tra (nhật ký, phiên, lịch sử). Tự cấp mã thời gian nếu thiếu.
+  // Thêm dòng không kiểm tra sơ đồ (nhật ký, phiên, lịch sử), nhưng vẫn dưới khóa để hai lần ghi đồng thời không đè nhau.
   function themDongThang(tenBang, banGhi) {
     var kc = SoDo.khoaChinh(tenBang), r = Object.assign({}, banGhi);
     if (!r[kc]) r[kc] = maThoiGian(tenBang);
     if (!r.tinhTrang) r.tinhTrang = 'Hoạt động';
     if (!r.taoLuc) r.taoLuc = bayGioIso();
-    var sh = _sheet(tenBang);
-    _ghiDong(sh, sh.getLastRow() + 1, tenBang, r);
-    _xoaCache(tenBang);
-    return r;
+    return khoa(function () {
+      var sh = _sheet(tenBang);
+      _ghiDong(sh, sh.getLastRow() + 1, tenBang, r);
+      _xoaCache(tenBang);
+      return r;
+    });
   }
 
   // Ghi một dòng nhật ký hệ thống.
@@ -113,6 +118,7 @@ var KhoDuLieu = (function () {
   function themDong(tenBang, banGhi, phien, canCu) {
     var b = SoDo.BANG[tenBang], kc = SoDo.khoaChinh(tenBang), gio = bayGioIso();
     return khoa(function () {
+      _xoaCache(tenBang);
       var r = _dienMacDinh(tenBang, Object.assign({}, banGhi));
       if (b.dinhDangMa !== 'TU_NHAP') r[kc] = capMa(tenBang);
       else {

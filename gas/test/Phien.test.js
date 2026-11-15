@@ -41,3 +41,10 @@ test('kiemTraTheGoogle: đúng aud, sai aud, hết hạn, email chưa xác minh,
   assert.equal(Phien.kiemTraTheGoogle({ ...ok, iss: 'evil.com' }, { clientId: 'CID', bayGioGiay: 1000 }).loi, 'SAI_ISS');
   assert.equal(Phien.kiemTraTheGoogle({ ...ok, email_verified: true, exp: '2000' }, { clientId: 'CID', bayGioGiay: 1000 }).hopLe, true);
 });
+
+test('phiên mang cờ batBuocDoiMatKhau của người dùng', () => {
+  const { Phien } = taiThuan();
+  const p = Phien.tao({ nguoiDung: { ...ND, batBuocDoiMatKhau: true }, bayGioIso: '2026-11-15T08:00:00+07:00', thietBi: 't', ngauNhienHex32: 'c'.repeat(32) });
+  assert.equal(p.batBuocDoiMatKhau, true);
+  assert.equal(Phien.tao({ nguoiDung: ND, bayGioIso: '2026-11-15T08:00:00+07:00', thietBi: 't', ngauNhienHex32: 'd'.repeat(32) }).batBuocDoiMatKhau, false);
+});

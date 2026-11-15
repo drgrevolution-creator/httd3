@@ -24,6 +24,8 @@ Theo bản thiết kế §12, giai đoạn 1 nghiệm thu bằng: đăng nhập 
 | 16 | Email cảnh báo | Đổi tên một file Sheets rồi "Chạy sao lưu ngay" (xong đổi lại) | Nhận email `[HTTD 3.0] Sao lưu đêm có lỗi` | | |
 | 17 | Vai trò xem | Đăng nhập tài khoản LANHDAO | Không thấy Danh mục, Quản trị chỉ có Tài khoản | | |
 | 18 | Máy tính 1280 px | Mở trên máy tính | Thanh điều hướng bên trái; bảng cuộn ngang vẫn thấy cột mã | | |
+| 19 | Hết hạn khi đang lưu danh mục | Mở biểu mẫu Thêm lĩnh vực, để phiên hết hạn (hoặc đặt lại mật khẩu từ máy khác), bấm Lưu | Hộp đăng nhập lại hiện đè lên; sau đăng nhập, biểu mẫu và dữ liệu đã gõ còn nguyên, Lưu được | | |
+| 20 | Còn mật khẩu tạm thì không thao tác được | Đăng nhập bằng mật khẩu tạm, tải lại trang, cố vào Danh mục | Luôn bị đưa về Quản trị; gọi thao tác khác bị từ chối cho đến khi đổi mật khẩu | | |
 
 Phát hiện lỗi: ghi số dòng và mô tả vào mục dưới, gửi Claude; Claude sửa theo quy trình (viết test tái hiện → sửa → test xanh → đẩy mã) rồi bạn `git pull`, `clasp push`, deploy bản mới (tài liệu 02, Phần 5).
 

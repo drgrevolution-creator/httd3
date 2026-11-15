@@ -56,3 +56,10 @@ test('anCotNhayCam bỏ matKhauBam và muoi', () => {
   const r = Bang.anCotNhayCam('DM_NguoiDung', { maNguoiDung: 'x', matKhauBam: 'a', muoi: 'b', phienBanBam: 2 });
   assert.deepEqual(Object.keys(r), ['maNguoiDung']);
 });
+
+test('người dùng không có Gmail: email được để trống, nhưng nếu có thì phải đúng định dạng', () => {
+  const { Bang } = taiThuan();
+  const goc = { maNguoiDung: 'ND-0003', tenDangNhap: 'ap01', hoTen: 'Trưởng ấp', vaiTro: ['DONVI'], danhSachDonVi: ['AP01'], tinhTrang: 'Hoạt động' };
+  assert.equal(Bang.kiemTra('DM_NguoiDung', goc, { thamChieu: { DM_DonVi: ['AP01'] } }).hopLe, true);
+  assert.ok(Bang.kiemTra('DM_NguoiDung', { ...goc, email: 'sai' }, { thamChieu: { DM_DonVi: ['AP01'] } }).loi.some((l) => l.khoa === 'email'));
+});
