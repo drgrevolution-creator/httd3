@@ -5,7 +5,7 @@
   "description": "HTTD 3.0 - Hệ thống quản lý nhiệm vụ, chỉ tiêu và chỉ số đánh giá, UBND xã Phước Hải",
   "type": "commonjs",
   "scripts": {
-    "test": "node --test gas/test/",
-    "test:web": "node --test web/test/"
+    "test": "node --test \"gas/test/**/*.test.js\"",
+    "test:web": "node --test \"web/test/**/*.test.mjs\""
   }
 }
