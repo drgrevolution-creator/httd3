@@ -45,9 +45,10 @@ test('phiên hết hạn giữa chừng giữ dữ liệu đang nhập và gửi
   try {
     await dangNhapMatKhau(page, url);
     await page.waitForSelector('[data-test="man-hom-nay"]');
-    await page.evaluate(() => localStorage.setItem('httd3.phien', 'het'));
     await page.goto(url + '/#/quan-tri');
     await page.waitForSelector('[data-test="doi-mat-khau"]');
+    await page.waitForSelector('[data-test="vung-suc-khoe"] .nhan-trang-thai'); // các lời gọi nền đã xong với phiên còn hạn
+    await page.evaluate(() => localStorage.setItem('httd3.phien', 'het')); // phiên hết hạn GIỮA CHỪNG khi đang điền
     await page.fill('[data-test="mat-khau-cu"]', 'Abc12345');
     await page.fill('[data-test="mat-khau-moi"]', 'Xyz98765');
     await page.fill('[data-test="mat-khau-lai"]', 'Xyz98765');
