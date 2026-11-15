@@ -6,6 +6,7 @@
   "type": "commonjs",
   "scripts": {
     "test": "node --test \"gas/test/**/*.test.js\"",
-    "test:web": "node --test \"web/test/**/*.test.mjs\""
+    "test:web": "node --test \"web/test/**/*.test.mjs\"",
+    "test:all": "npm test && npm run test:web"
   }
 }
