@@ -22,8 +22,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .dieu-huong { top: 0; right: auto; bottom: 0; height: auto; width: var(--dieu-huong-rong); flex-direction: column; justify-content: flex-start; align-items: stretch; border-top: 0; border-right: 1px solid var(--color-border-default); padding: var(--space-4) var(--space-3); gap: var(--space-1); }
   .dieu-huong .ten-he-thong { display: block; font-weight: 700; font-size: var(--font-size-lg); padding: var(--space-2) var(--space-3) var(--space-4); color: var(--color-text-primary); }
   .dieu-huong a { flex: 0 0 auto; flex-direction: row; justify-content: flex-start; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); font-size: var(--font-size-sm); }
-  .dieu-huong a[aria-current="page"] { background: var(--blue-50); }
-  :root[data-theme="dark"] .dieu-huong a[aria-current="page"] { background: rgba(59, 130, 246, 0.15); }
+  .dieu-huong a[aria-current="page"] { background: var(--color-bg-selected); }
   .noi-dung { margin-left: var(--dieu-huong-rong); max-width: none; padding: var(--space-6) var(--space-7); }
 }
 
@@ -56,8 +55,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .nhom-chon { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .nhom-chon label { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 36px; padding: 0 var(--space-3); border: 1px solid var(--color-border-strong); border-radius: 999px; font-size: var(--font-size-sm); cursor: pointer; color: var(--color-text-primary); }
 .nhom-chon input:checked + span { font-weight: 600; }
-.nhom-chon label:has(input:checked) { background: var(--blue-50); border-color: var(--color-action-primary); }
-:root[data-theme="dark"] .nhom-chon label:has(input:checked) { background: rgba(59, 130, 246, 0.15); }
+.nhom-chon label:has(input:checked) { background: var(--color-bg-selected); border-color: var(--color-action-primary); }
 .hang-nut { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-top: var(--space-4); }
 
 /* Thẻ, ô số */
@@ -99,8 +97,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   .danh-sach-chon button { flex: 0 0 auto; white-space: nowrap; border: 1px solid var(--color-border-strong); border-radius: 999px; min-height: 40px; scroll-snap-align: start; }
 }
 .danh-sach-chon button { text-align: left; min-height: 40px; padding: var(--space-2) var(--space-3); border: 0; background: transparent; border-radius: var(--radius-md); cursor: pointer; color: var(--color-text-primary); font-size: var(--font-size-sm); }
-.danh-sach-chon button[aria-current="true"] { background: var(--blue-50); color: var(--color-action-primary); font-weight: 600; }
-:root[data-theme="dark"] .danh-sach-chon button[aria-current="true"] { background: rgba(59, 130, 246, 0.15); }
+.danh-sach-chon button[aria-current="true"] { background: var(--color-bg-selected); color: var(--color-action-primary); font-weight: 600; }
 .chip-loc { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-3); }
 .chip-loc button { min-height: 36px; padding: 0 var(--space-3); border-radius: 999px; border: 1px solid var(--color-border-strong); background: var(--color-bg-surface); cursor: pointer; font-size: var(--font-size-sm); }
 .chip-loc button[aria-pressed="true"] { background: var(--color-action-primary); color: var(--color-text-inverse); border-color: var(--color-action-primary); }
