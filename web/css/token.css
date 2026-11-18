@@ -35,6 +35,7 @@
   --color-status-done: var(--green-600);     --color-status-done-bg: var(--green-50);
   --color-status-pending: var(--gray-500);   --color-status-pending-bg: var(--gray-100);
   --color-status-claude: var(--violet-600);  --color-status-claude-bg: var(--violet-50);
+  --color-bg-selected: var(--blue-50);
 
   /* Tầng thành phần */
   --nut-chieu-cao: 44px;
@@ -52,6 +53,7 @@
     --color-border-default: #273449; --color-border-strong: #374151;
     --color-status-overdue-bg: rgba(220, 38, 38, 0.18); --color-status-due-soon-bg: rgba(217, 119, 6, 0.18);
     --color-status-done-bg: rgba(22, 163, 74, 0.18); --color-status-pending-bg: rgba(107, 114, 128, 0.2); --color-status-claude-bg: rgba(124, 58, 237, 0.2);
+    --color-bg-selected: rgba(59, 130, 246, 0.18);
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4); --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
   }
 }
@@ -62,4 +64,5 @@
   --color-border-default: #273449; --color-border-strong: #374151;
   --color-status-overdue-bg: rgba(220, 38, 38, 0.18); --color-status-due-soon-bg: rgba(217, 119, 6, 0.18);
   --color-status-done-bg: rgba(22, 163, 74, 0.18); --color-status-pending-bg: rgba(107, 114, 128, 0.2); --color-status-claude-bg: rgba(124, 58, 237, 0.2);
+  --color-bg-selected: rgba(59, 130, 246, 0.18);
 }
