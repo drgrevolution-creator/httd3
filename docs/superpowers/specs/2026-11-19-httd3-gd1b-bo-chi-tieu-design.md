@@ -1,6 +1,6 @@
 # BẢN THIẾT KẾ BỔ SUNG: GIAI ĐOẠN 1b — HỆ THỐNG VÀ BỘ CHỈ TIÊU ĐA NGUỒN
 
-Ngày: 19/11/2026 · Phiên bản 0.1 (chờ Mr. Nobody duyệt) · Bổ sung cho `2026-11-14-httd3-design.md` (bản 0.3), mục 7.2, 7.3, 8.2, 12.
+Ngày: 19/11/2026 · Phiên bản 0.2 (**đã duyệt** 19/11/2026) · Bổ sung cho `2026-11-14-httd3-design.md` (bản 0.3), mục 7.2, 7.3, 8.2, 12.
 
 ## 1. Lý do
 
@@ -92,12 +92,24 @@ Màn **Nhập bộ chỉ tiêu** (QUANTRI):
 
 ## 6. Dữ liệu nạp sẵn trong giai đoạn 1b
 
-| Bộ | Nội dung nạp |
+**Quy tắc ưu tiên (Mr. Nobody chốt 19/11/2026):** làm cấu trúc dữ liệu trước; nạp đầy đủ trước các chỉ tiêu trong bảng Excel của Thành phố và các chỉ tiêu có cấp xã tham gia; chỉ tiêu thuộc hệ thống quốc gia mà cấp xã không tham gia thì chỉ lập danh mục (mã, tên, nhóm) theo Luật Thống kê hợp nhất, chưa nạp năm trường nội dung.
+
+**Đối chiếu năm mục nội dung các văn bản Trung ương (Claude, 19/11/2026).** "Cấp xã tham gia" được xác định khi mục 5 (cơ quan chịu trách nhiệm) hoặc mục 2 (phân tổ chủ yếu) có cấp xã; đã loại các trùng chữ "xã hội", "hợp tác xã":
+
+| Bộ | Số chỉ tiêu | Mục 5 giao cấp xã | Phân tổ xuống cấp xã |
+|---|---|---|---|
+| Quốc gia (Luật Thống kê; nội dung theo NĐ 94/2022/NĐ-CP) | 230 | 0 | 0 |
+| Nội vụ (TT 13/2025/TT-BNV) | 76 | 0 | 3: 0101 Số đơn vị hành chính; 0203 Số lượng cán bộ, công chức; 0205 Số lượng viên chức |
+| KH&CN (TT 45/2025/TT-BKHCN) | 137 | 0 | 0 |
+
+| Bộ | Nội dung nạp trong giai đoạn 1b |
 |---|---|
-| `LUAT-TK` | 230 chỉ tiêu, 21 nhóm, mã và tên; năm trường để trống, ghi chú "nội dung theo NĐ 94/2022/NĐ-CP" |
-| `TT13-BNV` | 76 chỉ tiêu, đủ năm trường |
-| `TT45-BKHCN` | 137 chỉ tiêu, đủ năm trường |
-| `TU-699` | 174 dòng, cha con, mục tiêu KH 2026 và 2026–2030, cấp dữ liệu, kỳ báo cáo, thuộc tính; các ô "[bổ sung thông tin]" để trống |
+| `TU-699` | **Ưu tiên 1.** 174 dòng, cha con, mục tiêu KH 2026 và 2026–2030, cấp dữ liệu, kỳ báo cáo TP và xã, thuộc tính, cơ quan theo dõi; các ô "[bổ sung thông tin]" để trống. Khoảng 58 chỉ tiêu có cấp xã được gắn nhãn "Cấp xã" |
+| `TT13-BNV` | Danh mục 76 chỉ tiêu (mã, tên, nhóm); **đủ năm trường cho 3 chỉ tiêu có phân tổ cấp xã** |
+| `TT45-BKHCN` | Danh mục 137 chỉ tiêu (mã, tên, nhóm) |
+| `LUAT-TK` | Danh mục 230 chỉ tiêu, 21 nhóm (mã, tên) theo Phụ lục Luật Thống kê hợp nhất; năm trường để trống, ghi chú "nội dung theo NĐ 94/2022/NĐ-CP" |
+
+Năm trường nội dung của toàn bộ chỉ tiêu ở ba văn bản Trung ương đã được Claude bóc tách và lưu sẵn trong file mẫu chuẩn trong kho mã (`data/bo-chi-tieu/`), để khi cần chỉ nhập lại một file là đủ, không phải đọc lại văn bản.
 
 Ghép nội hàm ban đầu: Claude đề xuất danh sách ghép trong file Excel để Mr. Nobody duyệt trước khi nhập; không tự ghép ngầm.
 
@@ -107,13 +119,13 @@ Nhập số liệu thực hiện theo kỳ, tổng hợp, bảng theo dõi ngư�
 
 ## 8. Nghiệm thu
 
-1. Bốn bộ hiện đúng số chỉ tiêu ở bảng mục 6; cây Phụ lục 699 có chỉ tiêu con dưới đúng cha.
-2. Mở chỉ tiêu `TT13-BNV:0101` thấy đủ năm trường đúng nguyên văn Phụ lục 2.
+1. Bốn bộ hiện đúng số chỉ tiêu ở bảng mục 6 (174, 76, 137, 230); cây Phụ lục 699 có chỉ tiêu con dưới đúng cha.
+2. Mở chỉ tiêu `TT13-BNV:0101` thấy đủ năm trường đúng nguyên văn Phụ lục 2; mở `LUAT-TK:0101` thấy mã, tên và ghi chú "nội dung theo NĐ 94/2022/NĐ-CP".
 3. Lọc "chỉ cấp xã" ở bộ `TU-699` ra khoảng 58 chỉ tiêu.
 4. Nhập lại một file mẫu chuẩn đã sửa một dòng: chỉ dòng đó đổi, nhật ký ghi SUA, không dòng nào bị xóa.
 5. Một chỉ tiêu ghép nội hàm hiện "Cùng nội hàm ở các bộ khác" đúng.
 
-## 9. Quyết định cần Mr. Nobody
+## 9. Quyết định (Mr. Nobody đã duyệt 19/11/2026: đồng ý cả ba điểm, gửi NĐ 94/2022/NĐ-CP, chốt quy tắc ưu tiên ở mục 6)
 
 1. **Duyệt mô hình bốn tầng** (mục 2) và việc thay `ChiTieu_NguonQuyDinh` bằng `ChiTieu_TrongBo`.
 2. **Nội dung chỉ tiêu quốc gia**: Mr. Nobody gửi NĐ 94/2022/NĐ-CP (và văn bản sửa đổi nếu có) để nạp đủ năm trường cho 230 chỉ tiêu; nếu chưa có, giai đoạn 1b nạp mã và tên trước.
