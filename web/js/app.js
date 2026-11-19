@@ -7,7 +7,9 @@ HTTD3.app = (function () {
     '#/hom-nay': { ten: 'Hôm nay', bieuTuong: '🏠', vaiTro: ['*'], ve: veHomNay },
     '#/danh-muc': { ten: 'Danh mục', bieuTuong: '📚', vaiTro: ['QUANTRI'], ve: function (goc) { return HTTD3.danhMuc ? HTTD3.danhMuc.ve(goc, trangThai) : veDangXay(goc, 'Danh mục'); } },
     '#/nhat-ky': { ten: 'Nhật ký', bieuTuong: '🧾', vaiTro: ['QUANTRI', 'KIEMDUYET'], ve: function (goc) { return HTTD3.danhMuc && HTTD3.danhMuc.veNhatKy ? HTTD3.danhMuc.veNhatKy(goc, trangThai) : veDangXay(goc, 'Nhật ký'); } },
-    '#/quan-tri': { ten: 'Quản trị', tenKhac: 'Tài khoản', bieuTuong: '⚙️', vaiTro: ['*'], ve: function (goc) { return HTTD3.quanTri.ve(goc, trangThai); } }
+    '#/quan-tri': { ten: 'Quản trị', tenKhac: 'Tài khoản', bieuTuong: '⚙️', vaiTro: ['*'], ve: function (goc) { return HTTD3.quanTri.ve(goc, trangThai); } },
+    // Không hiện trên thanh điều hướng: mở từ màn Bộ chỉ tiêu (nút "Nhập từ file") hoặc gõ đường dẫn.
+    '#/chi-tieu/nhap': { ten: 'Nhập bộ chỉ tiêu', bieuTuong: '📥', vaiTro: ['QUANTRI'], anMenu: true, ve: function (goc) { return HTTD3.nhapChiTieu.ve(goc, trangThai); } }
   };
 
   function coQuyen(t) { return t.vaiTro[0] === '*' || t.vaiTro.some(function (v) { return trangThai.vaiTro.indexOf(v) >= 0; }); }
@@ -39,7 +41,7 @@ HTTD3.app = (function () {
     var nav = document.getElementById('dieu-huong'); nav.innerHTML = '';
     nav.appendChild(el('div', { class: 'ten-he-thong', text: 'HTTD 3.0' }));
     Object.keys(TUYEN).forEach(function (h) {
-      var t = TUYEN[h]; if (!coQuyen(t)) return;
+      var t = TUYEN[h]; if (!coQuyen(t) || t.anMenu) return;
       var ten = (h === '#/quan-tri' && !laQT()) ? t.tenKhac : t.ten;
       nav.appendChild(el('a', { href: h, 'data-test': 'menu-' + h.slice(2), 'aria-current': location.hash === h ? 'page' : null }, [el('span', { class: 'bieu-tuong', 'aria-hidden': 'true', text: t.bieuTuong }), el('span', { text: ten })]));
     });

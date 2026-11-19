@@ -9,5 +9,8 @@
     "test:web": "node --test \"web/test/**/*.test.mjs\"",
     "test:py": "python3 -I scripts/chuyen-doi/test_chuyen_doi.py",
     "test:all": "npm test && npm run test:web"
+  },
+  "devDependencies": {
+    "xlsx": "0.18.5"
   }
 }

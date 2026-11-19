@@ -86,8 +86,63 @@ export function khoiDong({ cong = 0 } = {}) {
     'nguoiDung.sua': (d, p) => anND(sua('DM_NguoiDung', d.ma, d.thayDoi, p, d.canCu || 'quản trị sửa')),
     'nguoiDung.datLaiMatKhau': (d, p) => { const u = timND((x) => x.maNguoiDung === d.ma); u.matKhau = 'Moi' + Math.floor(Math.random() * 90000 + 10000) + 'y'; u.batBuocDoiMatKhau = true; ghiNK(p, 'DAT_LAI_MAT_KHAU', 'DM_NguoiDung', d.ma); return { matKhauTam: u.matKhau }; },
     'nhatKy.doc': (d) => kho.NhatKy.filter((r) => (!d.bang || r.bang === d.bang) && (!d.ma || String(r.ma) === String(d.ma))).sort((a, b) => b.thoiGian.localeCompare(a.thoiGian)).slice(0, d.gioiHan || 200),
-    'lich.chayNgay': (d) => ({ daChay: d.ten, luc: gio() })
+    'lich.chayNgay': (d) => ({ daChay: d.ten, luc: gio() }),
+    // Giai đoạn 1b — bộ chỉ tiêu: cùng luồng với gas/ketnoi/ChiTieuGas.gs, dùng BoChiTieu thật.
+    'chiTieu.doc': (d) => {
+      const ds = kho.ChiTieu_TrongBo.filter((r) => r.tinhTrang !== 'Xóa mềm');
+      if (!d.maBo) {
+        return { bo: kho.DM_BoChiTieu.filter((b) => b.tinhTrang !== 'Xóa mềm').map((b) => {
+          const cua = ds.filter((r) => r.maBo === b.maBo && r.tinhTrangHieuLuc !== 'Hết hiệu lực');
+          return { ...b, soChiTieu: cua.length, soCapXa: cua.filter((r) => /Xã/.test(r.capDuLieu || '')).length };
+        }) };
+      }
+      const bo = kho.DM_BoChiTieu.find((b) => b.maBo === d.maBo); if (!bo) loi('KHONG_TIM_THAY', 'Không có bộ chỉ tiêu ' + d.maBo);
+      return { bo, dong: ds.filter((r) => r.maBo === d.maBo).map((r) => { const o = { ...r, coNoiDung: NAM_TRUONG.some((k) => String(r[k] || '') !== '') }; for (const k of NAM_TRUONG) delete o[k]; return o; }) };
+    },
+    'chiTieu.chiTiet': (d) => {
+      const r = kho.ChiTieu_TrongBo.find((x) => x.maTrongBo === d.maTrongBo); if (!r) loi('KHONG_TIM_THAY', 'Không có chỉ tiêu ' + d.maTrongBo);
+      const chuan = r.maChiTieu ? kho.DM_ChiTieu.find((c) => c.maChiTieu === r.maChiTieu) || null : null;
+      const cung = r.maChiTieu ? kho.ChiTieu_TrongBo.filter((x) => x.maChiTieu === r.maChiTieu && x.maTrongBo !== r.maTrongBo).map((x) => ({ maTrongBo: x.maTrongBo, maBo: x.maBo, tenNguyenVan: x.tenNguyenVan })) : [];
+      return { dong: r, chuan, cungNoiHam: cung };
+    },
+    'chiTieu.nhap': (d, p) => {
+      if (JSON.stringify(d).length > 900000) loi('DU_LIEU_KHONG_HOP_LE', 'File quá lớn, hãy chia nhóm');
+      if (!Array.isArray(d.dong) || !d.dong.length) loi('DU_LIEU_KHONG_HOP_LE', 'File không có dòng chỉ tiêu nào');
+      const maBo = String(d.bo?.maBo || '').trim();
+      const dong = d.dong.map((r0) => { const r = T.BoChiTieu.chuanHoaDong(r0); if (!r.maBo) r.maBo = maBo; return r; });
+      const daCo = kho.ChiTieu_TrongBo.filter((r) => r.maBo === maBo);
+      const kt = T.BoChiTieu.kiemTraLo(maBo, dong, { daCo: daCo.map((r) => r.maTrongBo) });
+      if (!maBo) kt.loi.unshift({ dong: 0, khoa: 'maBo', thongBao: 'Thiếu mã bộ (sheet Bo, cột maBo)' });
+      kt.hopLe = kt.loi.length === 0;
+      const kh = T.BoChiTieu.keHoachNhap(daCo, dong);
+      const tomTat = { soThem: kh.them.length, soSua: kh.sua.length, soHetHieuLuc: kh.hetHieuLuc.length, giuNguyen: kh.giuNguyen };
+      if (d.cheDo !== 'ghi') {
+        const chuan = kho.DM_ChiTieu.map((c) => ({ maChiTieu: c.maChiTieu, tenChiTieu: c.tenChiTieu })), goiY = {};
+        if (chuan.length) for (const r of dong) { const c = daCo.find((x) => x.maTrongBo === r.maTrongBo); if (r.maChiTieu || c?.maChiTieu) continue; const g = T.BoChiTieu.goiYGhep(r.tenNguyenVan, chuan); if (g.length) goiY[r.maTrongBo] = g; }
+        return { kiemTra: kt, keHoach: tomTat, goiYGhep: goiY };
+      }
+      if (!kt.hopLe) { const e = new Error(kt.loi.length + ' lỗi, chưa ghi dòng nào'); e.ma = 'DU_LIEU_KHONG_HOP_LE'; e.thongBao = e.message; e.chiTiet = kt.loi; throw e; }
+      const canCu = d.canCu || 'Nhập file mẫu chuẩn bộ ' + maBo;
+      for (const r of kh.them) { const { __dong, ...x } = r; them('ChiTieu_TrongBo', x, p, canCu); }
+      for (const s of kh.sua) sua('ChiTieu_TrongBo', s.ma, s.thayDoi, p, canCu);
+      for (const ma of kh.hetHieuLuc) sua('ChiTieu_TrongBo', ma, { tinhTrangHieuLuc: 'Hết hiệu lực' }, p, canCu);
+      const bo = kho.DM_BoChiTieu.find((b) => b.maBo === maBo);
+      if (bo) Object.assign(bo, { ...Object.fromEntries(Object.entries(d.bo).filter(([k, v]) => v !== '' && SoDo.cot('DM_BoChiTieu', k) && !SoDo.cot('DM_BoChiTieu', k).heThong && SoDo.cot('DM_BoChiTieu', k).kieu !== 'number')), soChiTieu: dong.length });
+      else them('DM_BoChiTieu', { ...d.bo, soChiTieu: dong.length }, p, canCu);
+      return { maBo, ...tomTat };
+    },
+    'chiTieu.ghep': (d, p) => {
+      const r = kho.ChiTieu_TrongBo.find((x) => x.maTrongBo === d.maTrongBo); if (!r) loi('KHONG_TIM_THAY', 'Không có chỉ tiêu ' + d.maTrongBo);
+      let ma = d.maChiTieu;
+      if (d.taoMoi) {
+        const moi = { maChiTieu: d.taoMoi.maChiTieu, tenChiTieu: d.taoMoi.tenChiTieu || r.tenNguyenVan, mucLienQuanCapXa: T.BoChiTieu.mucLienQuanTuCap(r.capDuLieu), nguonSoLieuNoiDung: r.nguonSoLieu };
+        for (const k of ['khaiNiemPhuongPhapTinh', 'phanToChuYeu', 'kyCongBo', 'coQuanChuTriThuThap', 'coQuanPhoiHopThuThap', 'linhVucLon', 'thuocTinhTongHop', 'capDuLieu', 'kyBaoCaoXa']) if (r[k]) moi[k] = r[k];
+        ma = them('DM_ChiTieu', moi, p, d.canCu || 'Ghép nội hàm').maChiTieu;
+      } else if (!kho.DM_ChiTieu.some((c) => c.maChiTieu === ma)) loi('KHONG_TIM_THAY', 'Không có chỉ tiêu chuẩn ' + ma);
+      return { dong: sua('ChiTieu_TrongBo', r.maTrongBo, { maChiTieu: ma }, p, d.canCu || 'Ghép nội hàm'), chuan: kho.DM_ChiTieu.find((c) => c.maChiTieu === ma) };
+    }
   };
+  const NAM_TRUONG = ['khaiNiemPhuongPhapTinh', 'phanToChuYeu', 'kyCongBo', 'nguonSoLieu', 'coQuanChuTriThuThap', 'coQuanPhoiHopThuThap'];
   const layPhien = (ma) => (ma === 'het' ? { hetHanLuc: '2020-01-01T00:00:00+07:00', trangThaiPhien: 'hoatDong', vaiTro: [] } : phien[ma] || null);
 
   const server = http.createServer((req, res) => {

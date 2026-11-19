@@ -87,6 +87,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .bang tbody tr:hover td { background: var(--color-bg-subtle); }
 .bang tbody tr:hover td:first-child { background: var(--color-bg-subtle); }
 .bang tr[data-ngung="true"] td { color: var(--color-text-tertiary); text-decoration: line-through; }
+.bang tr[data-loi="true"] td { background: var(--color-status-overdue-bg); }
+.bang tr[data-het-hieu-luc="true"] td { color: var(--color-text-tertiary); }
 
 /* Danh sách chọn bên trái (máy tính) */
 .hai-cot { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
