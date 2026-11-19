@@ -59,6 +59,32 @@ Sau khi `clasp push` (hoặc dán tay) bản mới: **Deploy** → **Manage depl
 
 Nếu quen dòng lệnh: `clasp deployments` (lấy ID bản triển khai) rồi `clasp deploy -i <ID> -d "mô tả"`.
 
+## Phần 6. Cập nhật lên giai đoạn mới (ví dụ giai đoạn 1b — Bộ chỉ tiêu)
+
+Mỗi giai đoạn mới có thể thêm bảng (sheet) hoặc cột mới. Vì vậy, ngoài đẩy mã, cần **chạy lại thiết lập** để hệ thống tạo phần còn thiếu. Thực hiện như sau.
+
+1. **Tải mã mới.** Mở `https://github.com/drgrevolution-creator/httd3` → nút xanh **Code** → **Download ZIP**. Giải nén, ví dụ vào `C:\Users\User\httd3\httd3-main`. Có thể ghi đè thư mục cũ; file `.clasp.json` trong ZIP đã có sẵn mã dự án Apps Script. (Nếu máy đã cài git và đã `git clone`, chỉ cần `git pull`.)
+2. **Đẩy mã lên Apps Script.** Mở cửa sổ dòng lệnh (`cmd`) tại thư mục vừa giải nén:
+
+   ```bash
+   cd C:\Users\User\httd3\httd3-main
+   ```
+
+   ```bash
+   clasp push
+   ```
+
+   Khi được hỏi ghi đè manifest thì gõ `y`. Danh sách file đẩy lên phải có thêm `thuan/BoChiTieu.gs` và `ketnoi/ChiTieuGas.gs`.
+3. **Chạy lại thiết lập.** Trong trang Apps Script, mở file `ketnoi/ThietLap`, chọn hàm **chayThietLapLanDau**, bấm **Run**. Đọc **Execution log**:
+   - Phải thấy dòng `Gieo DM_BoChiTieu: 5 dòng` và dòng `Tài khoản quản trị đã có, không tạo lại`. Lần chạy lại này **không** in mật khẩu tạm mới; mật khẩu đang dùng giữ nguyên.
+   - Mở file `HTTD3_DuLieu` trên Drive: có sheet mới `ChiTieu_TrongBo`; sheet cũ `ChiTieu_NguonQuyDinh` (trống) không còn. File `HTTD3_DanhMuc` có sheet mới `DM_BoChiTieu` gồm 5 bộ.
+   - Nếu có dòng **"CẢNH BÁO <tên bảng>: tiêu đề hiện có khác sơ đồ, không ghi đè vì sheet đã có dữ liệu"**: hệ thống **chưa** thêm cột mới cho bảng đó, để bảo vệ dữ liệu đang có. Dừng lại, chụp log gửi Claude. Không tự sửa tiêu đề.
+4. **Kiểm tra.** Chọn hàm **chayKiemTraThietLap** → **Run** → log phải in `{"thieu":[]}`.
+5. **Triển khai phiên bản mới** theo Phần 5 (Manage deployments → bút chì → **New version** → Deploy). URL giữ nguyên.
+6. **Trang web** trên GitHub Pages tự cập nhật sau khi Claude gộp mã vào nhánh `main`, thường trong 1–2 phút. Mở trang, bấm Ctrl+F5 (trên điện thoại: kéo xuống để tải lại). Menu phải có thêm mục **📊 Chỉ tiêu**.
+
+Sau đó làm tiếp tài liệu 05 (nhập bộ chỉ tiêu) và 06 (nghiệm thu giai đoạn 1b).
+
 ## Sự cố thường gặp
 
 | Hiện tượng | Cách xử lý |
