@@ -4,3 +4,7 @@ web/config.local.js
 web/test/anh/
 .DS_Store
 .superpowers/
+
+# Dữ liệu nội bộ (văn bản chưa công khai, kết quả chuyển đổi từ đó) không đưa lên kho công khai
+data/rieng/
+__pycache__/

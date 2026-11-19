@@ -5,7 +5,7 @@
 var BoChiTieu = (function () {
   var BANG = 'ChiTieu_TrongBo';
   // Từ dừng khi so tên (CÓ DẤU, bỏ trước khi bỏ dấu để "số" không nuốt "sơ"). Script Python
-  // scripts/chuyen-doi/de_xuat_ghep.py đọc đúng dòng này.
+  // scripts/chuyen-doi/de_xuat_ghep.py đọc BoChiTieu.TU_DUNG qua node — sửa ở đây là đủ cho cả hai.
   var TU_DUNG = ['tỷ lệ', 'số lượng', 'số', 'tổng', 'tốc độ', 'tăng', 'trong đó'];
   // Cột do hệ thống quản lý: file nhập để trống thì giữ giá trị đang có.
   var COT_GIU_KHI_TRONG = { maChiTieu: 1, biThayTheBoi: 1, tinhTrangHieuLuc: 1 };
