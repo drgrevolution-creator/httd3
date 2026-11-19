@@ -5,6 +5,7 @@ HTTD3.app = (function () {
   var trangThai = { nguoiDung: null, vaiTro: [], soDoDanhMuc: [], cauHinh: {}, daKhoiDong: false };
   var TUYEN = {
     '#/hom-nay': { ten: 'Hôm nay', bieuTuong: '🏠', vaiTro: ['*'], ve: veHomNay },
+    '#/chi-tieu': { ten: 'Chỉ tiêu', bieuTuong: '📊', vaiTro: ['*'], ve: function (goc) { return HTTD3.chiTieu.ve(goc, trangThai); } },
     '#/danh-muc': { ten: 'Danh mục', bieuTuong: '📚', vaiTro: ['QUANTRI'], ve: function (goc) { return HTTD3.danhMuc ? HTTD3.danhMuc.ve(goc, trangThai) : veDangXay(goc, 'Danh mục'); } },
     '#/nhat-ky': { ten: 'Nhật ký', bieuTuong: '🧾', vaiTro: ['QUANTRI', 'KIEMDUYET'], ve: function (goc) { return HTTD3.danhMuc && HTTD3.danhMuc.veNhatKy ? HTTD3.danhMuc.veNhatKy(goc, trangThai) : veDangXay(goc, 'Nhật ký'); } },
     '#/quan-tri': { ten: 'Quản trị', tenKhac: 'Tài khoản', bieuTuong: '⚙️', vaiTro: ['*'], ve: function (goc) { return HTTD3.quanTri.ve(goc, trangThai); } },

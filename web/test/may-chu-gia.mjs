@@ -106,7 +106,7 @@ export function khoiDong({ cong = 0 } = {}) {
       return { dong: r, chuan, cungNoiHam: cung };
     },
     'chiTieu.nhap': (d, p) => {
-      if (JSON.stringify(d).length > 900000) loi('DU_LIEU_KHONG_HOP_LE', 'File quá lớn, hãy chia nhóm');
+      if (JSON.stringify(d).length > 900000) loi('DU_LIEU_KHONG_HOP_LE', 'File quá lớn để gửi một lần');
       if (!Array.isArray(d.dong) || !d.dong.length) loi('DU_LIEU_KHONG_HOP_LE', 'File không có dòng chỉ tiêu nào');
       const maBo = String(d.bo?.maBo || '').trim();
       const dong = d.dong.map((r0) => { const r = T.BoChiTieu.chuanHoaDong(r0); if (!r.maBo) r.maBo = maBo; return r; });
@@ -160,5 +160,5 @@ export function khoiDong({ cong = 0 } = {}) {
     if (!f.startsWith(WEB) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) { res.writeHead(404); return res.end('404'); }
     res.writeHead(200, { 'Content-Type': MIME[path.extname(f)] || 'application/octet-stream' }); fs.createReadStream(f).pipe(res);
   });
-  return new Promise((resolve) => server.listen(cong, '127.0.0.1', () => resolve({ url: 'http://127.0.0.1:' + server.address().port, kho, dung: () => new Promise((r) => server.close(r)) })));
+  return new Promise((resolve) => server.listen(cong, '127.0.0.1', () => resolve({ url: 'http://127.0.0.1:' + server.address().port, kho, goiThang: (action, d) => handlers[action](d, { maNguoiDung: 'ND-0001', email: 'nap-san@test', vaiTro: ['QUANTRI'] }), dung: () => new Promise((r) => server.close(r)) })));
 }

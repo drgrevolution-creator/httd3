@@ -80,7 +80,7 @@ var ChiTieuGas = (function () {
   // chiTieu.nhap({bo, dong, cheDo:'xemTruoc'|'ghi', canCu}).
   function nhap(d, phien) {
     d = d || {};
-    if (JSON.stringify(d).length > GIOI_HAN_THAN) throw _loi('DU_LIEU_KHONG_HOP_LE', 'File quá lớn, hãy chia nhóm (mỗi lần nhập tối đa khoảng 900 000 ký tự)');
+    if (JSON.stringify(d).length > GIOI_HAN_THAN) throw _loi('DU_LIEU_KHONG_HOP_LE', 'File quá lớn để gửi một lần (tối đa khoảng 900 000 ký tự). Không tách file của cùng một bộ — dòng thiếu trong file sẽ bị chuyển Hết hiệu lực; hãy nhập bản không kèm năm mục nội dung hoặc báo quản trị.');
     if (!Array.isArray(d.dong) || !d.dong.length) throw _loi('DU_LIEU_KHONG_HOP_LE', 'File không có dòng chỉ tiêu nào (sheet ChiTieu, từ dòng 3)');
     return KhoDuLieu.khoa(function () {
       var kb = _kiemTraBo(d.bo), maBo = kb.banGhi.maBo || '';

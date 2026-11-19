@@ -46,7 +46,7 @@ HTTD3.nhapChiTieu = (function () {
     });
   }
 
-  function chip(nhan, so, test) { return el('span', { class: 'nhan-trang-thai', 'data-mau': so ? 'xanh' : null, 'data-test': test, text: nhan + ' ' + so }); }
+  function chip(nhan, so, test, mau) { return el('span', { class: 'nhan-trang-thai', 'data-mau': so ? (mau || 'xanh') : null, 'data-test': test, text: nhan + ' ' + so }); }
 
   // Vẽ màn Nhập.
   function ve(goc) {
@@ -79,7 +79,7 @@ HTTD3.nhapChiTieu = (function () {
       vungKetQua.appendChild(el('section', { class: 'the' }, [
         el('h2', { text: (d.bo.maBo || '(chưa có mã bộ)') + (d.bo.tenBo ? ' — ' + d.bo.tenBo : '') }),
         el('p', { text: trang.file.name + ' · ' + d.dong.length + ' dòng chỉ tiêu' }),
-        el('div', { class: 'chip-loc', 'data-test': 'tom-tat' }, [chip('Thêm', kh.soThem, 'so-them'), chip('Sửa', kh.soSua, 'so-sua'), chip('Hết hiệu lực', kh.soHetHieuLuc, 'so-het'), chip('Giữ nguyên', kh.giuNguyen, 'so-giu')]),
+        el('div', { class: 'chip-loc', 'data-test': 'tom-tat' }, [chip('Thêm', kh.soThem, 'so-them'), chip('Sửa', kh.soSua, 'so-sua'), chip('Hết hiệu lực', kh.soHetHieuLuc, 'so-het', 'do'), chip('Giữ nguyên', kh.giuNguyen, 'so-giu')]),
         soGoiY ? el('p', { class: 'goi-y', text: soGoiY + ' dòng có gợi ý ghép với chỉ tiêu chuẩn đã có — ghép sau khi duyệt danh sách đề xuất, hệ thống không tự ghép.' }) : null
       ]));
       if (loi.length) {
@@ -102,8 +102,21 @@ HTTD3.nhapChiTieu = (function () {
           })));
         }))
       ])]));
-      nutGhi.disabled = !x.kiemTra.hopLe || (kh.soThem + kh.soSua + kh.soHetHieuLuc === 0);
-      nutGhi.title = !x.kiemTra.hopLe ? 'Còn lỗi trong file' : (nutGhi.disabled ? 'File giống hệt dữ liệu đang có, không có gì để ghi' : '');
+      // Dòng không còn trong file sẽ chuyển "Hết hiệu lực": bắt xác nhận riêng để tránh nhập nhầm file thiếu dòng.
+      var xacNhan = null;
+      if (x.kiemTra.hopLe && kh.soHetHieuLuc > 0) {
+        xacNhan = el('input', { type: 'checkbox', id: 'xac-nhan-het', 'data-test': 'xac-nhan-het-hieu-luc' });
+        vungKetQua.appendChild(el('section', { class: 'the canh-bao-het' }, [
+          el('p', { class: 'loi', text: kh.soHetHieuLuc + ' chỉ tiêu đang có trong bộ ' + d.bo.maBo + ' không có trong file này và sẽ chuyển "Hết hiệu lực" (không bị xóa, nhập lại file đầy đủ sẽ khôi phục).' }),
+          el('label', { for: 'xac-nhan-het', class: 'nhom-chon' }, [xacNhan, el('span', { text: 'Tôi hiểu, đây là file đầy đủ của bộ' })])
+        ]));
+      }
+      function capNhatNut() {
+        nutGhi.disabled = !x.kiemTra.hopLe || (kh.soThem + kh.soSua + kh.soHetHieuLuc === 0) || (xacNhan && !xacNhan.checked);
+        nutGhi.title = !x.kiemTra.hopLe ? 'Còn lỗi trong file' : (kh.soThem + kh.soSua + kh.soHetHieuLuc === 0 ? 'File giống hệt dữ liệu đang có, không có gì để ghi' : (xacNhan && !xacNhan.checked ? 'Cần xác nhận các chỉ tiêu sẽ chuyển Hết hiệu lực' : ''));
+      }
+      if (xacNhan) xacNhan.addEventListener('change', capNhatNut);
+      capNhatNut();
     }
 
     oFile.addEventListener('change', function () {
@@ -127,6 +140,7 @@ HTTD3.nhapChiTieu = (function () {
       api.goiApi('chiTieu.nhap', { bo: d.bo, dong: d.dong, cheDo: 'ghi', canCu: oCanCu.value.trim() }).then(function (kq) {
         ui.thongBao('Đã nhập ' + d.dong.length + ' chỉ tiêu vào bộ ' + kq.maBo + ': thêm ' + kq.soThem + ', sửa ' + kq.soSua + ', hết hiệu lực ' + kq.soHetHieuLuc + ', giữ nguyên ' + kq.giuNguyen + '.', 'thanh-cong');
         trang.duLieu = null; trang.xemTruoc = null; oFile.value = '';
+        if (HTTD3.chiTieu) HTTD3.chiTieu.lamMoi();
         vungKetQua.innerHTML = '';
         vungKetQua.appendChild(el('section', { class: 'the' }, [el('p', { text: 'Đã ghi bộ ' + kq.maBo + '. Có thể chọn file khác để nhập tiếp.' })]));
       }).catch(function (e) { ui.thongBao(e.message, 'loi'); nutGhi.disabled = false; })
