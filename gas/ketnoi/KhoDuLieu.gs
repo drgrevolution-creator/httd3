@@ -155,11 +155,88 @@ var KhoDuLieu = (function () {
     });
   }
 
+  // Ghi nhiều bản ghi liền nhau bằng MỘT lần setValues (định dạng ô như _ghiDong).
+  function _ghiKhoi(sh, viTri, tenBang, dsBanGhi) {
+    if (!dsBanGhi.length) return;
+    var cot = SoDo.BANG[tenBang].cot;
+    var dinhDang = cot.map(function (c) { return KIEU_CHU[c.kieu] ? '@' : 'General'; });
+    var rg = sh.getRange(viTri, 1, dsBanGhi.length, cot.length);
+    rg.setNumberFormats(dsBanGhi.map(function () { return dinhDang; }));
+    rg.setValues(dsBanGhi.map(function (r) { return Bang.thanhDong(tenBang, r); }));
+  }
+
+  // Ghi một lô vào bảng tự nhập mã: lo = {them:[banGhi], sua:[{ma, thayDoi, hanhDong?}]}.
+  // Một khóa; kiểm tra MỌI dòng trước khi ghi (một dòng lỗi → không ghi gì); thêm bằng một setValues khối;
+  // sửa theo __dong, các dòng liền nhau gộp một setValues; nhật ký một dòng mỗi bản ghi, ghi một khối.
+  // Mã không qua MaSo.hopLe: bảng dùng ghiLo (ChiTieu_TrongBo) có khóa dạng <maBo>:<maGoc> do BoChiTieu kiểm tra.
+  // tuyChon.thamChieuThem = {bang: [mã]} — mã sẽ có trong cùng lần khóa (ví dụ bộ sắp được thêm).
+  function ghiLo(tenBang, lo, phien, canCu, tuyChon) {
+    var b = SoDo.BANG[tenBang], kc = SoDo.khoaChinh(tenBang), gio = bayGioIso();
+    var nguoi = (phien && phien.email) || 'he-thong';
+    var them = (lo && lo.them) || [], sua = (lo && lo.sua) || [];
+    if (!b || b.dinhDangMa !== 'TU_NHAP') throw _loi('LOI_HE_THONG', 'ghiLo chỉ dùng cho bảng tự nhập mã: ' + tenBang);
+    return khoa(function () {
+      _xoaCache(tenBang);
+      var hienCo = {}; docBang(tenBang, { baoGomXoaMem: true }).forEach(function (r) { hienCo[String(r[kc])] = r; });
+      var tc = thamChieuCua(tenBang);
+      if (tc[tenBang]) tc[tenBang] = tc[tenBang].concat(them.map(function (r) { return String(r[kc] || ''); }));
+      var them2 = (tuyChon && tuyChon.thamChieuThem) || {};
+      Object.keys(them2).forEach(function (bg) { if (tc[bg]) tc[bg] = tc[bg].concat(them2[bg]); });
+      var loi = [], dongThem = [], capNhat = [], nk = [], trongLo = {};
+      function _baoLoi(viTri, ma, ds) { ds.forEach(function (l) { loi.push({ dong: viTri, ma: ma, khoa: l.khoa, thongBao: (ma ? ma + ': ' : '') + l.thongBao }); }); }
+      them.forEach(function (r0, i) {
+        var r = _dienMacDinh(tenBang, Object.assign({}, r0)), ma = String(r[kc] || '');
+        delete r.__dong;
+        if (!ma) return _baoLoi(i + 1, '', [{ khoa: kc, thongBao: 'Thiếu mã' }]);
+        if (hienCo[ma] || trongLo[ma]) return _baoLoi(i + 1, ma, [{ khoa: kc, thongBao: 'Mã đã tồn tại' }]);
+        trongLo[ma] = true;
+        r.taoLuc = gio; r.taoBoi = nguoi; r.capNhatLuc = gio; r.capNhatBoi = nguoi; r.tinhTrang = 'Hoạt động';
+        _baoLoi(i + 1, ma, Bang.kiemTra(tenBang, r, { thamChieu: tc }).loi);
+        dongThem.push(r);
+        nk.push({ phien: phien, hanhDong: 'THEM', bang: tenBang, ma: ma, sau: r, canCu: canCu || '' });
+      });
+      sua.forEach(function (s, i) {
+        var cu = hienCo[String(s.ma)];
+        if (!cu) return _baoLoi(them.length + i + 1, String(s.ma), [{ khoa: kc, thongBao: 'Không tìm thấy bản ghi' }]);
+        var moi = Object.assign({}, cu, s.thayDoi);
+        moi[kc] = cu[kc]; moi.taoLuc = cu.taoLuc; moi.taoBoi = cu.taoBoi; moi.capNhatLuc = gio; moi.capNhatBoi = nguoi;
+        delete moi.__dong;
+        _baoLoi(them.length + i + 1, String(s.ma), Bang.kiemTra(tenBang, moi, { thamChieu: tc }).loi);
+        capNhat.push({ dong: cu.__dong, banGhi: moi });
+        nk.push({ phien: phien, hanhDong: s.hanhDong || 'SUA', bang: tenBang, ma: String(s.ma), truoc: cu, sau: moi, canCu: canCu || '' });
+      });
+      if (loi.length) throw _loi('DU_LIEU_KHONG_HOP_LE', loi.length + ' lỗi: ' + loi.slice(0, 5).map(function (l) { return l.thongBao; }).join('; '), loi);
+      var sh = _sheet(tenBang);
+      _ghiKhoi(sh, sh.getLastRow() + 1, tenBang, dongThem);
+      capNhat.sort(function (x, y) { return x.dong - y.dong; });
+      for (var i = 0; i < capNhat.length;) {
+        var j = i; while (j + 1 < capNhat.length && capNhat[j + 1].dong === capNhat[j].dong + 1) j++;
+        _ghiKhoi(sh, capNhat[i].dong, tenBang, capNhat.slice(i, j + 1).map(function (c) { return c.banGhi; }));
+        i = j + 1;
+      }
+      _xoaCache(tenBang);
+      if (nk.length) {
+        var kcNk = SoDo.khoaChinh('NhatKy'), daCap = {};
+        var dongNk = nk.map(function (o) {
+          var d = NhatKy.dong(Object.assign({ bayGioIso: gio }, o)), ma;
+          do { ma = maThoiGian('NhatKy'); } while (daCap[ma]);
+          daCap[ma] = true;
+          d[kcNk] = ma; d.tinhTrang = 'Hoạt động'; d.taoLuc = gio;
+          return d;
+        });
+        var shNk = _sheet('NhatKy');
+        _ghiKhoi(shNk, shNk.getLastRow() + 1, 'NhatKy', dongNk);
+        _xoaCache('NhatKy');
+      }
+      return { soThem: dongThem.length, soSua: capNhat.length };
+    });
+  }
+
   // Cấu hình chung dạng {khoa: giaTri}.
   function docCauHinh() {
     var o = {}; docBang('CauHinh').forEach(function (r) { o[r.khoa] = r.giaTri; }); return o;
   }
 
   return { idFile: idFile, bayGioIso: bayGioIso, khoa: khoa, docBang: docBang, timDong: timDong, thamChieuCua: thamChieuCua, capMa: capMa, maThoiGian: maThoiGian,
-    themDongThang: themDongThang, ghiNhatKy: ghiNhatKy, themDong: themDong, capNhatDong: capNhatDong, docCauHinh: docCauHinh, _sheet: _sheet, _ss: _ss, _xoaCache: _xoaCache, _loi: _loi };
+    themDongThang: themDongThang, ghiNhatKy: ghiNhatKy, themDong: themDong, capNhatDong: capNhatDong, ghiLo: ghiLo, docCauHinh: docCauHinh, _sheet: _sheet, _ss: _ss, _xoaCache: _xoaCache, _loi: _loi };
 })();

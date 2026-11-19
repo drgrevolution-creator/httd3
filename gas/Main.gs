@@ -26,7 +26,7 @@ function doPost(e) {
 // Lắp các handler của lớp kết nối vào bộ điều phối.
 function _xuLyYeuCau(yeuCau) {
   var handlers = {};
-  [XacThuc.HANDLERS, DanhMucGas.HANDLERS, (typeof LichDem !== 'undefined' ? LichDem.HANDLERS : {})].forEach(function (h) {
+  [XacThuc.HANDLERS, DanhMucGas.HANDLERS, ChiTieuGas.HANDLERS, (typeof LichDem !== 'undefined' ? LichDem.HANDLERS : {})].forEach(function (h) {
     Object.keys(h).forEach(function (k) { handlers[k] = h[k]; });
   });
   return DieuPhoi.xuLy(yeuCau, { handlers: handlers, layPhien: XacThuc.layPhien, bayGioIso: KhoDuLieu.bayGioIso() });

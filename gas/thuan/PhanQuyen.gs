@@ -19,7 +19,12 @@ var PhanQuyen = (function () {
     'nguoiDung.sua': ['QUANTRI'],
     'nguoiDung.datLaiMatKhau': ['QUANTRI'],
     'nhatKy.doc': ['QUANTRI', 'KIEMDUYET'],
-    'lich.chayNgay': ['QUANTRI']
+    'lich.chayNgay': ['QUANTRI'],
+    // Giai đoạn 1b: bộ chỉ tiêu
+    'chiTieu.doc': ['@'],
+    'chiTieu.chiTiet': ['@'],
+    'chiTieu.nhap': ['QUANTRI'],
+    'chiTieu.ghep': ['QUANTRI']
   };
 
   // Action có trong bảng không.

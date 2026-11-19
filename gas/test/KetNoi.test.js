@@ -16,7 +16,7 @@ function dangNhap(ctx, ten, mk) { const r = goi(ctx, { action: 'xacThuc.dangNhap
 test('nạp toàn bộ file theo thứ tự ASCII của clasp không ném lỗi (lỗi tham chiếu lúc nạp)', () => {
   const ctx = taiTatCa();
   assert.ok(ctx.__daNap[0] === 'Main.gs' && ctx.__daNap[1].startsWith('ketnoi/'), 'thứ tự nạp: ' + ctx.__daNap.slice(0, 3).join(', '));
-  for (const t of ['SoDo', 'KhoDuLieu', 'XacThuc', 'DanhMucGas', 'LichDem', 'ThietLap']) assert.equal(typeof ctx[t], 'object', 'thiếu ' + t);
+  for (const t of ['SoDo', 'KhoDuLieu', 'XacThuc', 'DanhMucGas', 'ChiTieuGas', 'BoChiTieu', 'LichDem', 'ThietLap']) assert.equal(typeof ctx[t], 'object', 'thiếu ' + t);
   assert.equal(typeof ctx.DanhMucGas.HANDLERS['danhMuc.doc'], 'function');
 });
 
@@ -112,4 +112,143 @@ test('1b: thiết lập lại xóa sheet ChiTieu_NguonQuyDinh trống, tạo Chi
   assert.equal(dv.getRange(1, 1, 1, 1).getValues()[0][0], 'maDonViSuaTay', 'không được ghi đè tiêu đề sheet có dữ liệu');
   assert.ok(bc.some((s) => /DM_DonVi/.test(s) && /tiêu đề/.test(s)), 'phải có cảnh báo tiêu đề lệch');
   assert.equal(ctx.KhoDuLieu.docBang('DM_BoChiTieu').length, 5);
+});
+
+// ---------- Giai đoạn 1b: ghi lô và API bộ chỉ tiêu ----------
+function quanTri() {
+  const { ctx, matKhauTam } = thietLap();
+  const phien = dangNhap(ctx, 'quantri', matKhauTam).maPhien;
+  assert.equal(goi(ctx, { phien, action: 'xacThuc.doiMatKhau', duLieu: { matKhauCu: matKhauTam, matKhauMoi: 'Moi12345' } }).ok, true);
+  return { ctx, phien };
+}
+const BO = (maBo) => ({ maBo, tenBo: 'Bộ ' + maBo, loaiHeThong: 'Quốc gia' });
+function loMau(maBo, n, them) {
+  return Array.from({ length: n }, (_, i) => {
+    const ma = String(i + 1).padStart(4, '0');
+    return Object.assign({
+      maTrongBo: maBo + ':' + ma, maBo, maGoc: ma, sttTrongBo: String(i + 1), nhomMa: String(Math.floor(i / 11) + 1).padStart(2, '0'),
+      nhomTen: 'Nhóm thử', tenNguyenVan: 'Chỉ tiêu thử số ' + (i + 1),
+      khaiNiemPhuongPhapTinh: ('Khái niệm dòng một\n- ý a;\n+ ý b. ').repeat(15), phanToChuYeu: '- Tỉnh, thành phố', kyCongBo: 'Năm.',
+      nguonSoLieu: '- Chế độ báo cáo', coQuanChuTriThuThap: 'Bộ Kế hoạch và Đầu tư (Tổng cục Thống kê)', coQuanPhoiHopThuThap: '+ Bộ Công an;\n+ Bộ Tư pháp.',
+      mucTieu: '[{"giaiDoan":"2026","nguyenVan":">=1.924.469"}]'
+    }, them ? them(i) : {});
+  });
+}
+const nhap = (ctx, phien, maBo, dong, cheDo, canCu) => goi(ctx, { phien, action: 'chiTieu.nhap', duLieu: { bo: BO(maBo), dong, cheDo, canCu } });
+function docMoi(ctx, bang, tc) { ctx.KhoDuLieu._xoaCache(bang); return ctx.KhoDuLieu.docBang(bang, tc); }
+
+test('1b: chiTieu.nhap 230 dòng — một khóa, ít lần setValues; nhập lại giống hệt không ghi gì; bỏ một dòng → Hết hiệu lực', () => {
+  const { ctx, phien } = quanTri();
+  const dong = loMau('LUAT-TK', 230);
+  const xt = nhap(ctx, phien, 'LUAT-TK', dong, 'xemTruoc');
+  assert.equal(xt.ok, true, JSON.stringify(xt).slice(0, 400));
+  assert.equal(xt.duLieu.kiemTra.hopLe, true);
+  assert.deepEqual(xt.duLieu.keHoach, { soThem: 230, soSua: 0, soHetHieuLuc: 0, giuNguyen: 0 });
+  assert.equal(docMoi(ctx, 'ChiTieu_TrongBo').length, 0, 'xem trước không được ghi');
+
+  const k0 = ctx.__gia.lockCount; ctx.__gia.setValuesDem = {}; ctx.__gia.ghiKhiKhongKhoa.length = 0;
+  const g = nhap(ctx, phien, 'LUAT-TK', dong, 'ghi', 'Luật Thống kê hợp nhất');
+  assert.equal(g.ok, true, JSON.stringify(g).slice(0, 400));
+  assert.equal(g.duLieu.soThem, 230);
+  assert.equal(ctx.__gia.lockCount - k0, 1, 'cả lần nhập chỉ một khóa');
+  assert.ok((ctx.__gia.setValuesDem.ChiTieu_TrongBo || 0) <= 3, 'setValues ChiTieu_TrongBo: ' + ctx.__gia.setValuesDem.ChiTieu_TrongBo);
+  assert.ok((ctx.__gia.setValuesDem.NhatKy || 0) <= 3, 'setValues NhatKy: ' + ctx.__gia.setValuesDem.NhatKy);
+  assert.deepEqual(ctx.__gia.ghiKhiKhongKhoa, []);
+  const ds = docMoi(ctx, 'ChiTieu_TrongBo');
+  assert.equal(ds.length, 230);
+  assert.equal(ds[0].maGoc, '0001');
+  assert.equal(ds[5].coQuanPhoiHopThuThap, '+ Bộ Công an;\n+ Bộ Tư pháp.');
+  assert.equal(ds[5].mucTieu[0].so, 1924469);
+  assert.equal(docMoi(ctx, 'DM_BoChiTieu').find((b) => b.maBo === 'LUAT-TK').soChiTieu, 230);
+  const nk = docMoi(ctx, 'NhatKy', { baoGomXoaMem: true });
+  assert.equal(nk.filter((r) => r.bang === 'ChiTieu_TrongBo').length, 230, 'mỗi bản ghi một dòng nhật ký');
+  assert.equal(new Set(nk.map((r) => r.maNhatKy)).size, nk.length, 'mã nhật ký không trùng');
+
+  const nk0 = nk.length;
+  const g2 = nhap(ctx, phien, 'LUAT-TK', dong, 'ghi', 'nhập lại');
+  assert.equal(g2.ok, true, JSON.stringify(g2).slice(0, 400));
+  assert.equal(g2.duLieu.soThem, 0); assert.equal(g2.duLieu.soSua, 0); assert.equal(g2.duLieu.giuNguyen, 230);
+  assert.equal(docMoi(ctx, 'NhatKy', { baoGomXoaMem: true }).length, nk0, 'nhập lại giống hệt không ghi nhật ký');
+
+  const g3 = nhap(ctx, phien, 'LUAT-TK', dong.slice(1), 'ghi', 'bỏ 0001');
+  assert.equal(g3.ok, true, JSON.stringify(g3).slice(0, 400));
+  assert.equal(g3.duLieu.soHetHieuLuc, 1);
+  ctx.KhoDuLieu._xoaCache('ChiTieu_TrongBo');
+  assert.equal(ctx.KhoDuLieu.timDong('ChiTieu_TrongBo', 'LUAT-TK:0001').tinhTrangHieuLuc, 'Hết hiệu lực');
+  assert.equal(docMoi(ctx, 'ChiTieu_TrongBo').length, 230, 'không xóa dòng');
+  assert.equal(docMoi(ctx, 'DM_BoChiTieu').find((b) => b.maBo === 'LUAT-TK').soChiTieu, 229);
+});
+
+test('1b: lô có lỗi — xem trước báo dòng lỗi, ghi bị từ chối và không ghi dòng nào; ghiLo kiểm tra hết trước khi ghi', () => {
+  const { ctx, phien } = quanTri();
+  const xau = loMau('TT13-BNV', 3); xau[2].chaTrongBo = 'TT13-BNV:9999';
+  const xt = nhap(ctx, phien, 'TT13-BNV', xau, 'xemTruoc');
+  assert.equal(xt.ok, true);
+  assert.equal(xt.duLieu.kiemTra.hopLe, false);
+  assert.deepEqual(xt.duLieu.kiemTra.loi.map((l) => l.dong + ':' + l.khoa), ['3:chaTrongBo']);
+  const g = nhap(ctx, phien, 'TT13-BNV', xau, 'ghi', 'thử');
+  assert.equal(g.ok, false); assert.equal(g.loi.ma, 'DU_LIEU_KHONG_HOP_LE');
+  assert.equal(docMoi(ctx, 'ChiTieu_TrongBo').length, 0);
+  assert.equal(docMoi(ctx, 'DM_BoChiTieu').find((b) => b.maBo === 'TT13-BNV').tenBo, 'Hệ thống chỉ tiêu thống kê ngành Nội vụ', 'bộ không bị sửa khi lô lỗi');
+  const sh = ctx.KhoDuLieu._sheet('ChiTieu_TrongBo'), dongSheet = sh.getLastRow();
+  const tot = loMau('TT13-BNV', 2), hong = Object.assign(loMau('TT13-BNV', 3)[2], { maBo: 'KHONG-CO' });
+  assert.throws(() => ctx.KhoDuLieu.ghiLo('ChiTieu_TrongBo', { them: tot.concat([hong]) }, null, 'thử'), /DU_LIEU_KHONG_HOP_LE/);
+  assert.equal(sh.getLastRow(), dongSheet, 'ghiLo lỗi một dòng thì không ghi dòng nào');
+});
+
+test('1b: chiTieu.chiTiet giữ xuống dòng; chiTieu.ghep tạo chuẩn mới, ghép dòng bộ khác, cungNoiHam; nhập lại không xóa liên kết', () => {
+  const { ctx, phien } = quanTri();
+  const tt13 = loMau('TT13-BNV', 1, () => ({ tenNguyenVan: 'Số đơn vị hành chính', capDuLieu: 'Thành phố/Xã', khaiNiemPhuongPhapTinh: '- Dòng một;\n+ Dòng hai.', coQuanChuTriThuThap: 'Vụ Chính quyền địa phương, Bộ Nội vụ.', coQuanPhoiHopThuThap: '' }));
+  tt13[0].maTrongBo = 'TT13-BNV:0101'; tt13[0].maGoc = '0101';
+  assert.equal(nhap(ctx, phien, 'TT13-BNV', tt13, 'ghi', 'TT13').ok, true);
+  assert.equal(nhap(ctx, phien, 'TU-699', loMau('TU-699', 1, () => ({ tenNguyenVan: 'Số đơn vị hành chính cấp xã', capDuLieu: 'Thành phố' })), 'ghi', '699').ok, true);
+
+  const ct = goi(ctx, { phien, action: 'chiTieu.chiTiet', duLieu: { maTrongBo: 'TT13-BNV:0101' } });
+  assert.equal(ct.ok, true, JSON.stringify(ct));
+  assert.equal(ct.duLieu.dong.khaiNiemPhuongPhapTinh, '- Dòng một;\n+ Dòng hai.');
+  assert.equal(ct.duLieu.dong.coQuanChuTriThuThap, 'Vụ Chính quyền địa phương, Bộ Nội vụ.');
+  assert.equal(ct.duLieu.chuan, null); assert.deepEqual(ct.duLieu.cungNoiHam, []);
+  assert.equal(goi(ctx, { phien, action: 'chiTieu.chiTiet', duLieu: { maTrongBo: 'X:1' } }).loi.ma, 'KHONG_TIM_THAY');
+
+  const g1 = goi(ctx, { phien, action: 'chiTieu.ghep', duLieu: { maTrongBo: 'TT13-BNV:0101', taoMoi: { maChiTieu: 'DVHC-01', tenChiTieu: 'Số đơn vị hành chính' } } });
+  assert.equal(g1.ok, true, JSON.stringify(g1));
+  const chuan = docMoi(ctx, 'DM_ChiTieu').find((r) => r.maChiTieu === 'DVHC-01');
+  assert.equal(chuan.khaiNiemPhuongPhapTinh, '- Dòng một;\n+ Dòng hai.');
+  assert.equal(chuan.nguonSoLieuNoiDung, '- Chế độ báo cáo');
+  assert.equal(chuan.mucLienQuanCapXa, 'A');
+  assert.equal(goi(ctx, { phien, action: 'chiTieu.ghep', duLieu: { maTrongBo: 'TU-699:0001', maChiTieu: 'DVHC-01' } }).ok, true);
+  assert.equal(goi(ctx, { phien, action: 'chiTieu.ghep', duLieu: { maTrongBo: 'TU-699:0001', maChiTieu: 'KHONG-CO' } }).loi.ma, 'KHONG_TIM_THAY');
+
+  const ct2 = goi(ctx, { phien, action: 'chiTieu.chiTiet', duLieu: { maTrongBo: 'TT13-BNV:0101' } }).duLieu;
+  assert.equal(ct2.chuan.maChiTieu, 'DVHC-01');
+  assert.deepEqual(ct2.cungNoiHam, [{ maTrongBo: 'TU-699:0001', maBo: 'TU-699', tenNguyenVan: 'Số đơn vị hành chính cấp xã' }]);
+
+  const lai = nhap(ctx, phien, 'TT13-BNV', tt13, 'ghi', 'nhập lại');
+  assert.equal(lai.duLieu.soSua, 0, 'file để trống maChiTieu không xóa liên kết');
+  ctx.KhoDuLieu._xoaCache('ChiTieu_TrongBo');
+  assert.equal(ctx.KhoDuLieu.timDong('ChiTieu_TrongBo', 'TT13-BNV:0101').maChiTieu, 'DVHC-01');
+
+  const doc = goi(ctx, { phien, action: 'chiTieu.doc', duLieu: {} }).duLieu;
+  const b = doc.bo.find((x) => x.maBo === 'TT13-BNV');
+  assert.equal(b.soChiTieu, 1); assert.equal(b.soCapXa, 1);
+  assert.equal(doc.bo.length, 5);
+  const mot = goi(ctx, { phien, action: 'chiTieu.doc', duLieu: { maBo: 'TT13-BNV' } }).duLieu;
+  assert.equal(mot.bo.maBo, 'TT13-BNV'); assert.equal(mot.dong.length, 1);
+  assert.equal(mot.dong[0].khaiNiemPhuongPhapTinh, undefined, 'danh sách không kèm năm trường');
+  assert.equal(mot.dong[0].coNoiDung, true);
+
+  const xt = goi(ctx, { phien, action: 'chiTieu.nhap', duLieu: { bo: BO('TT45-BKHCN'), dong: loMau('TT45-BKHCN', 1, () => ({ tenNguyenVan: 'Số đơn vị hành chính' })), cheDo: 'xemTruoc' } }).duLieu;
+  assert.deepEqual(xt.goiYGhep['TT45-BKHCN:0001'].map((x) => x.maChiTieu), ['DVHC-01']);
+});
+
+test('1b: DONVI đọc được bộ chỉ tiêu nhưng không nhập/ghép; thân quá lớn bị từ chối', () => {
+  const { ctx, phien } = quanTri();
+  const t = goi(ctx, { phien, action: 'nguoiDung.them', duLieu: { banGhi: { tenDangNhap: 'dv04', hoTen: 'CV HCC', vaiTro: ['DONVI'], danhSachDonVi: ['DV04'] } } });
+  const pDV = dangNhap(ctx, 'dv04', t.duLieu.matKhauTam).maPhien;
+  assert.equal(goi(ctx, { phien: pDV, action: 'xacThuc.doiMatKhau', duLieu: { matKhauCu: t.duLieu.matKhauTam, matKhauMoi: 'Dv123456' } }).ok, true);
+  assert.equal(goi(ctx, { phien: pDV, action: 'chiTieu.doc', duLieu: {} }).ok, true);
+  assert.equal(nhap(ctx, pDV, 'TT13-BNV', loMau('TT13-BNV', 1), 'ghi', 'x').loi.ma, 'KHONG_CO_QUYEN');
+  assert.equal(goi(ctx, { phien: pDV, action: 'chiTieu.ghep', duLieu: { maTrongBo: 'TT13-BNV:0001', maChiTieu: 'A' } }).loi.ma, 'KHONG_CO_QUYEN');
+  const to = nhap(ctx, phien, 'TT13-BNV', loMau('TT13-BNV', 1, () => ({ khaiNiemPhuongPhapTinh: 'x'.repeat(950000) })), 'xemTruoc');
+  assert.equal(to.loi.ma, 'DU_LIEU_KHONG_HOP_LE'); assert.match(to.loi.thongBao, /quá lớn/);
 });

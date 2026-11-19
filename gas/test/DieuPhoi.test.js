@@ -71,3 +71,14 @@ test('phiên còn mật khẩu tạm chỉ được đổi mật khẩu, đăng 
   assert.equal(DieuPhoi.xuLy({ action: 'xacThuc.doiMatKhau', phien: 'p', duLieu: {} }, nc).ok, true);
   assert.equal(DieuPhoi.xuLy({ action: 'heThong.khoiDong', phien: 'p', duLieu: {} }, nc).ok, true);
 });
+
+test('1b: bốn action chiTieu.* có trong bảng quyền đúng vai trò', () => {
+  const { PhanQuyen } = taiThuan();
+  for (const a of ['chiTieu.doc', 'chiTieu.chiTiet']) {
+    assert.ok(PhanQuyen.tonTai(a), a); assert.ok(PhanQuyen.duocPhep(['DONVI'], a), a); assert.equal(PhanQuyen.canPhien(a), true);
+  }
+  for (const a of ['chiTieu.nhap', 'chiTieu.ghep']) {
+    assert.ok(PhanQuyen.tonTai(a), a); assert.ok(PhanQuyen.duocPhep(['QUANTRI'], a), a);
+    for (const v of ['CHUYENVIEN', 'DONVI', 'KIEMDUYET']) assert.ok(!PhanQuyen.duocPhep([v], a), a + ' ' + v);
+  }
+});

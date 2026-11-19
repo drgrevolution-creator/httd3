@@ -5,7 +5,7 @@ const crypto = require('node:crypto');
 
 function taoDichVuGia(tuyChon) {
   tuyChon = tuyChon || {};
-  const trangThai = { props: {}, cache: {}, mail: [], triggers: [], files: {}, folders: {}, log: [], lockHeld: false, lockCount: 0, ghiKhiKhongKhoa: [], fetch: tuyChon.fetch || (() => ({ code: 200, text: '{}' })) };
+  const trangThai = { props: {}, cache: {}, mail: [], triggers: [], files: {}, folders: {}, log: [], lockHeld: false, lockCount: 0, ghiKhiKhongKhoa: [], setValuesDem: {}, fetch: tuyChon.fetch || (() => ({ code: 200, text: '{}' })) };
   let dem = 0; const id = (p) => p + '_' + (++dem);
 
   class Range {
@@ -13,6 +13,7 @@ function taoDichVuGia(tuyChon) {
     getValues() { const out = []; for (let i = 0; i < this.nr; i++) { const row = this.sh.rows[this.r - 1 + i] || []; out.push(Array.from({ length: this.nc }, (_, j) => (row[this.c - 1 + j] === undefined ? '' : row[this.c - 1 + j]))); } return out; }
     setValues(vals) {
       if (!trangThai.lockHeld) trangThai.ghiKhiKhongKhoa.push(this.sh.name);
+      trangThai.setValuesDem[this.sh.name] = (trangThai.setValuesDem[this.sh.name] || 0) + 1;
       for (let i = 0; i < vals.length; i++) { const ri = this.r - 1 + i; while (this.sh.rows.length <= ri) this.sh.rows.push([]); for (let j = 0; j < vals[i].length; j++) this.sh.rows[ri][this.c - 1 + j] = vals[i][j]; }
       return this;
     }

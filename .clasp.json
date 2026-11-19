@@ -3,6 +3,7 @@
   "rootDir": "gas",
   "filePushOrder": [
     "thuan/Bang.gs",
+    "thuan/BoChiTieu.gs",
     "thuan/DieuPhoi.gs",
     "thuan/DuLieuGieo.gs",
     "thuan/MaSo.gs",
@@ -17,6 +18,7 @@
     "ketnoi/KhoDuLieu.gs",
     "ketnoi/XacThuc.gs",
     "ketnoi/DanhMucGas.gs",
+    "ketnoi/ChiTieuGas.gs",
     "ketnoi/LichDem.gs",
     "ketnoi/ThietLap.gs",
     "Main.gs"
