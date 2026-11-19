@@ -21,12 +21,30 @@ var ThietLap = (function () {
     var sh = ss.getSheetByName(tenBang), moi = false;
     if (!sh) { sh = ss.insertSheet(tenBang); moi = true; }
     var cot = SoDo.BANG[tenBang].cot, td = Bang.dongTieuDe(tenBang);
-    // Sheet đã có dữ liệu mà tiêu đề khác sơ đồ: KHÔNG ghi đè (tránh lệch cột dữ liệu), chỉ cảnh báo.
+    // Sheet đã có dữ liệu mà tiêu đề khác sơ đồ:
+    //  - tiêu đề cũ là dãy con đúng thứ tự của sơ đồ mới (sơ đồ chỉ THÊM cột, ví dụ DM_ChiTieu ở giai đoạn 1b)
+    //    → chèn cột còn thiếu đúng vị trí (dữ liệu dịch theo), ghi lại tiêu đề;
+    //  - khác kiểu khác (sửa tay, đổi tên, đổi thứ tự) → KHÔNG ghi đè, chỉ cảnh báo; đọc/ghi bảng đó bị chặn (KhoDuLieu).
     if (!moi && sh.getLastRow() >= 3) {
-      var hienCo = sh.getRange(1, 1, 1, Math.min(sh.getMaxColumns(), cot.length)).getValues()[0].map(String);
-      var khop = td[0].every(function (k, i) { return hienCo[i] === k; });
-      if (!khop) { var cb = 'CẢNH BÁO ' + tenBang + ': tiêu đề hiện có khác sơ đồ, không ghi đè vì sheet đã có dữ liệu'; console.log(cb); return { canhBao: cb }; }
-      return { moi: false };
+      var cu = sh.getRange(1, 1, 1, sh.getMaxColumns()).getValues()[0].map(String);
+      while (cu.length && cu[cu.length - 1] === '') cu.pop();
+      var khop = td[0].every(function (k, i) { return cu[i] === k; });
+      if (khop) return { moi: false };
+      var j = 0, thieu = [];
+      td[0].forEach(function (k, i) { if (j < cu.length && cu[j] === k) j++; else thieu.push(i); });
+      if (!cu.length || j < cu.length) { var cb = 'CẢNH BÁO ' + tenBang + ': tiêu đề hiện có khác sơ đồ, không ghi đè vì sheet đã có dữ liệu'; console.log(cb); return { canhBao: cb }; }
+      // Chèn theo thứ tự tăng dần: vị trí trong sơ đồ mới đúng bằng vị trí cần chèn sau các lần chèn trước; gộp cột liền nhau.
+      for (var a = 0; a < thieu.length;) {
+        var b = a; while (b + 1 < thieu.length && thieu[b + 1] === thieu[b] + 1) b++;
+        var viTri = thieu[a] + 1, so = b - a + 1;
+        if (viTri <= sh.getMaxColumns()) sh.insertColumnsBefore(viTri, so); else sh.insertColumnsAfter(sh.getMaxColumns(), so);
+        a = b + 1;
+      }
+      sh.getRange(1, 1, 2, cot.length).setValues(td);
+      thieu.forEach(function (i) { if (KIEU_CHU[cot[i].kieu]) sh.getRange(3, i + 1, Math.max(sh.getLastRow(), 5000), 1).setNumberFormat('@'); });
+      var tb = 'Đã bổ sung ' + thieu.length + ' cột cho ' + tenBang + ' (giữ nguyên dữ liệu): ' + thieu.map(function (i) { return cot[i].khoa; }).join(', ');
+      console.log(tb);
+      return { canhBao: tb };
     }
     if (sh.getMaxColumns() < cot.length) sh.insertColumnsAfter(sh.getMaxColumns(), cot.length - sh.getMaxColumns());  // sheet mới chỉ có 26 cột
     sh.getRange(1, 1, 2, cot.length).setValues(td);
@@ -61,6 +79,7 @@ var ThietLap = (function () {
   // Gieo một bảng danh mục nếu bảng còn trống.
   function _gieo(tenBang, ds) {
     KhoDuLieu._xoaCache(tenBang);
+    if (KhoDuLieu.kiemTieuDe(tenBang)) return 0;   // tiêu đề lệch đã được cảnh báo, không gieo vào
     if (KhoDuLieu.docBang(tenBang, { baoGomXoaMem: true }).length) return 0;
     var sh = KhoDuLieu._sheet(tenBang), gio = KhoDuLieu.bayGioIso(), cot = SoDo.BANG[tenBang].cot;
     var dong = ds.map(function (r) {
@@ -118,13 +137,16 @@ var ThietLap = (function () {
     return baoCao;
   }
 
-  // Những gì còn thiếu để hệ thống chạy được.
-  function kiemTraThietLap() {
+  // Những gì còn thiếu để hệ thống chạy được. tuyChon.tieuDe = true: kiểm thêm tiêu đề từng sheet (chậm hơn; dùng khi chạy tay).
+  function kiemTraThietLap(tuyChon) {
     var thieu = [];
     SoDo.FILE.forEach(function (ten) { if (!_props().getProperty('ID_' + ten)) thieu.push('ID_' + ten); });
     ['ID_THU_MUC_GOC', 'ID_THU_MUC_SAO_LUU', 'ID_THU_MUC_MINH_CHUNG', 'ID_THU_MUC_HOP_THU_CHO_NHAP', 'GOOGLE_CLIENT_ID', 'KHOA_API_CLAUDE'].forEach(function (k) { if (!_props().getProperty(k)) thieu.push(k); });
     if (!thieu.some(function (k) { return k.indexOf('ID_HTTD3') === 0; })) {
-      SoDo.danhSachBang().forEach(function (t) { try { KhoDuLieu._sheet(t); } catch (e) { thieu.push('sheet ' + t); } });
+      SoDo.danhSachBang().forEach(function (t) {
+        try { KhoDuLieu._sheet(t); } catch (e) { thieu.push('sheet ' + t); return; }
+        if (tuyChon && tuyChon.tieuDe && KhoDuLieu.kiemTieuDe(t)) thieu.push('tiêu đề ' + t);
+      });
     }
     var cacTrigger = ScriptApp.getProjectTriggers().map(function (t) { return t.getHandlerFunction(); });
     if (cacTrigger.indexOf('saoLuuHangDem') < 0) thieu.push('trigger saoLuuHangDem');
@@ -137,4 +159,4 @@ var ThietLap = (function () {
 
 // Hàm toàn cục để chọn và Run trong trình soạn Apps Script.
 function chayThietLapLanDau() { return ThietLap.thietLapLanDau(); }
-function chayKiemTraThietLap() { var kq = ThietLap.kiemTraThietLap(); console.log(JSON.stringify(kq)); return kq; }
+function chayKiemTraThietLap() { var kq = ThietLap.kiemTraThietLap({ tieuDe: true }); console.log(JSON.stringify(kq)); return kq; }

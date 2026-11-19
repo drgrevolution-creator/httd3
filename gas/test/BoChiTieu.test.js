@@ -65,7 +65,7 @@ test('keHoachNhap: giống hệt, bỏ dòng, sửa một ô, khôi phục dòng
   const { BoChiTieu } = taiThuan();
   const daCo = [d({ maTrongBo: 'TU-699:1', taoLuc: 'x', __dong: 3 }), d({ maTrongBo: 'TU-699:2' }), d({ maTrongBo: 'TU-699:3', tinhTrangHieuLuc: 'Hết hiệu lực' })];
   const moi = [d({ maTrongBo: 'TU-699:1' }), d({ maTrongBo: 'TU-699:2' })];
-  assert.deepEqual(JSON.parse(JSON.stringify(BoChiTieu.keHoachNhap(daCo.slice(0, 2), moi))), { them: [], sua: [], hetHieuLuc: [], giuNguyen: 2 });
+  assert.deepEqual(JSON.parse(JSON.stringify(BoChiTieu.keHoachNhap(daCo.slice(0, 2), moi))), { them: [], sua: [], hetHieuLuc: [], giuNguyen: 2, boGhep: [] });
   assert.deepEqual(JSON.parse(JSON.stringify(BoChiTieu.keHoachNhap(daCo.slice(0, 2), moi.slice(0, 1)))).hetHieuLuc, ['TU-699:2']);
   const k = BoChiTieu.keHoachNhap(daCo.slice(0, 2), [d({ maTrongBo: 'TU-699:1', donViTinh: '%' }), d({ maTrongBo: 'TU-699:2' }), d({ maTrongBo: 'TU-699:9' })]);
   assert.deepEqual(JSON.parse(JSON.stringify(k.sua)), [{ ma: 'TU-699:1', thayDoi: { donViTinh: '%' } }]);
@@ -81,4 +81,27 @@ test('mucLienQuanTuCap', () => {
   assert.equal(BoChiTieu.mucLienQuanTuCap('Thành phố/Xã'), 'A');
   assert.equal(BoChiTieu.mucLienQuanTuCap('Thành phố'), 'C');
   assert.equal(BoChiTieu.mucLienQuanTuCap(''), 'C');
+});
+
+test('soát 3: mucTieu sai JSON là lỗi dòng; thiếu cột mucTieu hoặc mucTieu rỗng không sinh Sửa', () => {
+  const { BoChiTieu } = taiThuan();
+  const d = (o) => Object.assign({ maBo: 'TU-699', tenNguyenVan: 'Tên' }, o);
+  assert.equal(BoChiTieu.chuanHoaDong({ mucTieu: '>=10' }).mucTieu, '>=10', 'giữ chuỗi sai để báo lỗi');
+  const r = BoChiTieu.kiemTraLo('TU-699', [d({ maTrongBo: 'TU-699:1', mucTieu: '[]' }), d({ maTrongBo: 'TU-699:2', mucTieu: '>=10' })].map(BoChiTieu.chuanHoaDong));
+  assert.deepEqual(r.loi.map((l) => l.dong + ':' + l.khoa), ['2:mucTieu']);
+  const daCo = [d({ maTrongBo: 'TU-699:1', mucTieu: [] }), d({ maTrongBo: 'TU-699:2', mucTieu: '' })];
+  const kh = BoChiTieu.keHoachNhap(daCo, [d({ maTrongBo: 'TU-699:1' }), d({ maTrongBo: 'TU-699:2', mucTieu: '' })]);
+  assert.equal(kh.giuNguyen, 2, JSON.stringify(kh.sua));
+});
+
+test('soát 2: đổi tên dòng đã ghép → bỏ ghép (trừ khi file ghi rõ mã chuẩn); đổi cột khác thì giữ ghép', () => {
+  const { BoChiTieu } = taiThuan();
+  const d = (o) => Object.assign({ maBo: 'TU-699' }, o);
+  const daCo = [d({ maTrongBo: 'TU-699:1', tenNguyenVan: 'A', maChiTieu: 'CT-A' }), d({ maTrongBo: 'TU-699:2', tenNguyenVan: 'B', maChiTieu: 'CT-B', donViTinh: '%' })];
+  const kh = BoChiTieu.keHoachNhap(daCo, [d({ maTrongBo: 'TU-699:1', tenNguyenVan: 'A khác' }), d({ maTrongBo: 'TU-699:2', tenNguyenVan: 'B', donViTinh: 'Người' })]);
+  assert.deepEqual(JSON.parse(JSON.stringify(kh.sua)), [{ ma: 'TU-699:1', thayDoi: { tenNguyenVan: 'A khác', maChiTieu: '' } }, { ma: 'TU-699:2', thayDoi: { donViTinh: 'Người' } }]);
+  assert.deepEqual(JSON.parse(JSON.stringify(kh.boGhep)), [{ ma: 'TU-699:1', maChiTieu: 'CT-A', tenCu: 'A', tenMoi: 'A khác' }]);
+  const giu = BoChiTieu.keHoachNhap(daCo, [d({ maTrongBo: 'TU-699:1', tenNguyenVan: 'A khác', maChiTieu: 'CT-A' })]);
+  assert.deepEqual(JSON.parse(JSON.stringify(giu.sua[0].thayDoi)), { tenNguyenVan: 'A khác' });
+  assert.deepEqual(giu.boGhep, []);
 });

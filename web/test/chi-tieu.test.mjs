@@ -93,6 +93,28 @@ test('chi tiết: TT13-BNV:0101 đủ năm mục, Chủ trì đúng nguyên văn
   } finally { await dong(); }
 });
 
+test('chỉ tiêu chuẩn: danh sách một nội hàm một mã kèm số bộ; mở ra thấy các dòng đang ghép', async () => {
+  const ctx = await moi({ width: 1280, height: 800 });
+  const { page, url, dong, mc } = ctx;
+  try {
+    for (const ma of ['TT13-BNV', 'LUAT-TK']) mc.goiThang('chiTieu.nhap', { ...DU_LIEU[ma], cheDo: 'ghi', canCu: 'nạp' });
+    mc.goiThang('chiTieu.ghep', { maTrongBo: 'LUAT-TK:0101', taoMoi: { maChiTieu: 'DT-01', tenChiTieu: 'Diện tích và cơ cấu đất' } });
+    mc.goiThang('chiTieu.ghep', { maTrongBo: 'TT13-BNV:0101', maChiTieu: 'DT-01' });
+    await dangNhapMatKhau(page, url); await page.waitForSelector('[data-test="man-hom-nay"]');
+    await page.click('[data-test="menu-chi-tieu"]'); await page.waitForSelector('[data-test="man-chi-tieu"]');
+    await page.click('[data-test="tab-chuan"]');
+    await page.waitForSelector('[data-test="bang-chuan"] tr[data-ma="DT-01"]');
+    assert.equal((await page.textContent('[data-test="bang-chuan"] tr[data-ma="DT-01"] [data-cot="soBo"]')).trim(), '2');
+    await page.click('[data-test="bang-chuan"] tr[data-ma="DT-01"]');
+    await page.waitForSelector('[data-test="tam-truot"] [data-test="dong-ghep"]');
+    const ds = await page.textContent('[data-test="dong-ghep"]');
+    assert.match(ds, /LUAT-TK:0101/); assert.match(ds, /TT13-BNV:0101/);
+    await page.click('[data-test="tam-truot"] button[aria-label="Đóng"]');
+    await page.click('[data-test="tab-theo-bo"]');
+    await page.waitForSelector('[data-test="cay-chi-tieu"] tr[data-ma]');
+  } finally { await dong(); }
+});
+
 test('điện thoại 360 px: không cuộn ngang trang, tìm chỉ tiêu theo tên', async () => {
   const { page, dong } = await moVaNap({ width: 360, height: 740 });
   try {

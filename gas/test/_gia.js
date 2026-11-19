@@ -23,6 +23,7 @@ function taoDichVuGia(tuyChon) {
     constructor(ss, name) { this.ss = ss; this.name = name; this.rows = []; this.maxCols = 26; this.frozen = 0; }
     getName() { return this.name; } getLastRow() { return this.rows.length; } getMaxColumns() { return this.maxCols; }
     insertColumnsAfter(after, n) { this.maxCols = Math.max(this.maxCols, after + n); return this; }
+    insertColumnsBefore(col, n) { for (const r of this.rows) if (r.length >= col - 1) r.splice(col - 1, 0, ...Array(n).fill('')); this.maxCols += n; return this; }
     getRange(r, c, nr, nc) { return new Range(this, r, c, nr === undefined ? 1 : nr, nc === undefined ? 1 : nc); }
     getDataRange() { return new Range(this, 1, 1, Math.max(this.rows.length, 1), this.maxCols); }
     appendRow(vals) { if (!trangThai.lockHeld) trangThai.ghiKhiKhongKhoa.push(this.name); this.rows.push(vals.slice()); return this; }

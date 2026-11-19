@@ -32,6 +32,8 @@ Làm lần lượt **TU-699 → TT13-BNV → TT45-BKHCN → LUAT-TK**. Mỗi b�
 6. Bấm **Ghi vào hệ thống**. Thông báo xanh hiện "Đã nhập N chỉ tiêu vào bộ …".
 7. Quay lại màn **Chỉ tiêu**. Số bên cạnh tên bộ phải đúng bằng N.
 
+Khi nhập lại một bộ đã có, bấm **Xem … dòng sẽ sửa** để thấy từng mã và cột thay đổi trước khi ghi. Nếu hiện khung đỏ **"… chỉ tiêu đã ghép nội hàm nhưng đổi tên"**: các dòng đó sẽ được **bỏ ghép**, để số liệu sau này không gắn nhầm chỉ tiêu. Trường hợp này hay gặp khi văn bản mới chèn thêm dòng không số làm mã các dòng sau dịch đi. Sau khi nhập, kiểm tra lại các dòng đó và ghép lại nếu vẫn cùng nội hàm.
+
 **Nếu có lỗi:** danh sách lỗi ghi rõ **số dòng trong Excel** (ví dụ "Dòng 7 · tenNguyenVan: Thiếu tên chỉ tiêu"). Nút Ghi bị khóa cho đến khi file hết lỗi. Hãy chụp màn hình gửi Claude; Claude sửa file và gửi lại.
 
 **Nếu thấy dòng đỏ "… chỉ tiêu sẽ chuyển Hết hiệu lực" kèm ô xác nhận:** file đang chọn **thiếu** một số chỉ tiêu so với bộ đã có trong hệ thống. Chỉ tích ô xác nhận khi chắc chắn đây là file đầy đủ, mới hơn của bộ, ví dụ văn bản mới bãi bỏ một số chỉ tiêu. Nếu không chắc, đừng ghi, hỏi Claude trước. Chỉ tiêu "Hết hiệu lực" không bị xóa; nhập lại file đầy đủ thì chúng trở lại "Còn hiệu lực".
@@ -61,6 +63,7 @@ Ghép từng cặp trên màn **Chỉ tiêu**:
 2. Trong tấm chi tiết, bấm **🔗 Ghép nội hàm**, điền **Mã mới** theo bảng ghép (tên đã điền sẵn), rồi bấm **Ghép**. Hệ thống tạo chỉ tiêu chuẩn mới, sao năm mục từ dòng gốc, và tự gợi ý mức liên quan cấp xã (A nếu có cấp xã, C nếu chỉ cấp Thành phố).
 3. Mở dòng cần ghép theo (ví dụ dòng TU-699), bấm **Ghép nội hàm**, chọn mã vừa tạo ở ô **Ghép với chỉ tiêu chuẩn có sẵn**, rồi bấm **Ghép**.
 4. Mở lại một trong hai dòng: mục **Cùng nội hàm ở các bộ khác** phải hiện dòng còn lại.
+5. Bấm thẻ **Chỉ tiêu chuẩn** ở đầu màn: mã vừa tạo hiện với **Số bộ** = số bộ đã ghép. Bấm vào mã để xem năm mục chuẩn và các dòng đang ghép.
 
 Việc ghép được ghi vào nhật ký, kèm căn cứ là "Theo danh sách đề xuất ghép đã duyệt". Nhập lại file của bộ **không** xóa các liên kết đã ghép.
 

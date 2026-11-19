@@ -36,11 +36,30 @@ var KhoDuLieu = (function () {
     try { return fn(); } finally { _dangGiuKhoa = false; lock.releaseLock(); }
   }
 
+  // Tiêu đề dòng 1 phải khớp sơ đồ (cột thừa ở cuối được bỏ qua). Lệch → trả thông báo, khớp → null.
+  // Ghi theo thứ tự cột sơ đồ vào sheet lệch tiêu đề sẽ làm lệch dữ liệu, nên mọi đọc/ghi bảng đó phải dừng.
+  function _lechTieuDe(tenBang, hang1) {
+    var cot = SoDo.BANG[tenBang].cot;
+    for (var i = 0; i < cot.length; i++) {
+      if (String(hang1[i] === undefined ? '' : hang1[i]) !== cot[i].khoa) {
+        return 'Sheet ' + tenBang + ' có tiêu đề cột khác sơ đồ (cột ' + (i + 1) + ': "' + (hang1[i] === undefined ? '' : hang1[i]) + '" thay vì "' + cot[i].khoa + '"). Chạy lại chayThietLapLanDau; nếu vẫn báo, liên hệ quản trị.';
+      }
+    }
+    return null;
+  }
+  function kiemTieuDe(tenBang) {
+    var sh = _sheet(tenBang);
+    if (sh.getLastRow() < 1) return null;
+    return _lechTieuDe(tenBang, sh.getRange(1, 1, 1, SoDo.BANG[tenBang].cot.length).getValues()[0]);
+  }
+
   // Đọc toàn bộ bản ghi của bảng (cache trong một lần chạy). tuyChon.baoGomXoaMem = true để lấy cả bản ghi xóa mềm.
   function docBang(tenBang, tuyChon) {
     if (!_cacheBang[tenBang]) {
       var sh = _sheet(tenBang);
       var gt = sh.getLastRow() >= 1 ? sh.getRange(1, 1, Math.max(sh.getLastRow(), 2), SoDo.BANG[tenBang].cot.length).getValues() : [[], []];
+      var lech = sh.getLastRow() >= 1 ? _lechTieuDe(tenBang, gt[0]) : null;
+      if (lech) throw _loi('CHUA_THIET_LAP', lech);
       _cacheBang[tenBang] = Bang.tuMaTran(tenBang, gt).banGhi;
     }
     var ds = _cacheBang[tenBang];
@@ -238,5 +257,5 @@ var KhoDuLieu = (function () {
   }
 
   return { idFile: idFile, bayGioIso: bayGioIso, khoa: khoa, docBang: docBang, timDong: timDong, thamChieuCua: thamChieuCua, capMa: capMa, maThoiGian: maThoiGian,
-    themDongThang: themDongThang, ghiNhatKy: ghiNhatKy, themDong: themDong, capNhatDong: capNhatDong, ghiLo: ghiLo, docCauHinh: docCauHinh, _sheet: _sheet, _ss: _ss, _xoaCache: _xoaCache, _loi: _loi };
+    themDongThang: themDongThang, ghiNhatKy: ghiNhatKy, themDong: themDong, capNhatDong: capNhatDong, ghiLo: ghiLo, docCauHinh: docCauHinh, kiemTieuDe: kiemTieuDe, _sheet: _sheet, _ss: _ss, _xoaCache: _xoaCache, _loi: _loi };
 })();

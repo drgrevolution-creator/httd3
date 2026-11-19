@@ -91,10 +91,20 @@ export function khoiDong({ cong = 0 } = {}) {
     'chiTieu.doc': (d) => {
       const ds = kho.ChiTieu_TrongBo.filter((r) => r.tinhTrang !== 'Xóa mềm');
       if (!d.maBo) {
-        return { bo: kho.DM_BoChiTieu.filter((b) => b.tinhTrang !== 'Xóa mềm').map((b) => {
-          const cua = ds.filter((r) => r.maBo === b.maBo && r.tinhTrangHieuLuc !== 'Hết hiệu lực');
-          return { ...b, soChiTieu: cua.length, soCapXa: cua.filter((r) => /Xã/.test(r.capDuLieu || '')).length };
-        }) };
+        const conHL = ds.filter((r) => r.tinhTrangHieuLuc !== 'Hết hiệu lực');
+        return {
+          bo: kho.DM_BoChiTieu.filter((b) => b.tinhTrang !== 'Xóa mềm').map((b) => {
+            const cua = conHL.filter((r) => r.maBo === b.maBo);
+            return { ...b, soChiTieu: cua.length, soCapXa: cua.filter((r) => /Xã/.test(r.capDuLieu || '')).length };
+          }),
+          chuan: kho.DM_ChiTieu.filter((c) => c.tinhTrang !== 'Xóa mềm').map((c) => {
+            const dg = conHL.filter((r) => r.maChiTieu === c.maChiTieu).map((r) => ({ maTrongBo: r.maTrongBo, maBo: r.maBo, tenNguyenVan: r.tenNguyenVan }));
+            const cacBo = [...new Set(dg.map((x) => x.maBo))].sort();
+            const o = { ...c, cacBo, soBo: cacBo.length, cacDong: dg };
+            for (const k of ['khaiNiemPhuongPhapTinh', 'phanToChuYeu', 'kyCongBo', 'nguonSoLieuNoiDung', 'coQuanChuTriThuThap', 'coQuanPhoiHopThuThap']) delete o[k];
+            return o;
+          })
+        };
       }
       const bo = kho.DM_BoChiTieu.find((b) => b.maBo === d.maBo); if (!bo) loi('KHONG_TIM_THAY', 'Không có bộ chỉ tiêu ' + d.maBo);
       return { bo, dong: ds.filter((r) => r.maBo === d.maBo).map((r) => { const o = { ...r, coNoiDung: NAM_TRUONG.some((k) => String(r[k] || '') !== '') }; for (const k of NAM_TRUONG) delete o[k]; return o; }) };
@@ -115,11 +125,11 @@ export function khoiDong({ cong = 0 } = {}) {
       if (!maBo) kt.loi.unshift({ dong: 0, khoa: 'maBo', thongBao: 'Thiếu mã bộ (sheet Bo, cột maBo)' });
       kt.hopLe = kt.loi.length === 0;
       const kh = T.BoChiTieu.keHoachNhap(daCo, dong);
-      const tomTat = { soThem: kh.them.length, soSua: kh.sua.length, soHetHieuLuc: kh.hetHieuLuc.length, giuNguyen: kh.giuNguyen };
+      const tomTat = { soThem: kh.them.length, soSua: kh.sua.length, soHetHieuLuc: kh.hetHieuLuc.length, giuNguyen: kh.giuNguyen, soBoGhep: kh.boGhep.length };
       if (d.cheDo !== 'ghi') {
         const chuan = kho.DM_ChiTieu.map((c) => ({ maChiTieu: c.maChiTieu, tenChiTieu: c.tenChiTieu })), goiY = {};
         if (chuan.length) for (const r of dong) { const c = daCo.find((x) => x.maTrongBo === r.maTrongBo); if (r.maChiTieu || c?.maChiTieu) continue; const g = T.BoChiTieu.goiYGhep(r.tenNguyenVan, chuan); if (g.length) goiY[r.maTrongBo] = g; }
-        return { kiemTra: kt, keHoach: tomTat, goiYGhep: goiY };
+        return { kiemTra: kt, keHoach: tomTat, goiYGhep: goiY, boGhep: kh.boGhep, chiTietSua: kh.sua.map((s) => ({ ma: s.ma, cot: Object.keys(s.thayDoi) })), tenCot: Object.fromEntries(SoDo.BANG.ChiTieu_TrongBo.cot.map((c) => [c.khoa, c.ten])) };
       }
       if (!kt.hopLe) { const e = new Error(kt.loi.length + ' lỗi, chưa ghi dòng nào'); e.ma = 'DU_LIEU_KHONG_HOP_LE'; e.thongBao = e.message; e.chiTiet = kt.loi; throw e; }
       const canCu = d.canCu || 'Nhập file mẫu chuẩn bộ ' + maBo;

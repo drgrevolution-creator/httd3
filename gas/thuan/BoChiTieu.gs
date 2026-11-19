@@ -36,9 +36,11 @@ var BoChiTieu = (function () {
     Object.keys(dong || {}).forEach(function (k) {
       var v = dong[k], c = SoDo.cot(BANG, k);
       if (k === 'mucTieu') {
+        // Chuỗi JSON hợp lệ → mảng đã tách số; rỗng → []; sai dạng → GIỮ NGUYÊN để kiemTraLo báo lỗi dòng.
         var ds = v;
-        if (typeof v === 'string') { try { ds = v.trim() ? JSON.parse(v) : []; } catch (e) { ds = []; } }
-        r[k] = (Array.isArray(ds) ? ds : []).map(_mucTieu);
+        if (v === undefined || v === null) ds = [];
+        else if (typeof v === 'string') { if (!v.trim()) ds = []; else { try { ds = JSON.parse(v); } catch (e) { ds = v; } } }
+        r[k] = Array.isArray(ds) ? ds.map(_mucTieu) : v;
       } else if (k === 'maGoc' || k === 'sttTrongBo') r[k] = (v === undefined || v === null) ? '' : String(v).trim();
       else if (c && c.kieu !== 'number' && c.kieu !== 'json' && c.kieu !== 'boolean' && typeof v !== 'object') r[k] = (v === undefined || v === null) ? '' : String(v).trim();
       else r[k] = v;
@@ -60,6 +62,7 @@ var BoChiTieu = (function () {
       else if (dem[ma]) loi.push({ dong: so, khoa: 'maTrongBo', thongBao: 'Mã ' + ma + ' trùng với dòng ' + dem[ma] });
       if (ma && !dem[ma]) dem[ma] = so;
       if (!String(r.tenNguyenVan || '').trim()) loi.push({ dong: so, khoa: 'tenNguyenVan', thongBao: 'Thiếu tên chỉ tiêu' });
+      if (r.mucTieu !== undefined && r.mucTieu !== '' && !Array.isArray(r.mucTieu)) loi.push({ dong: so, khoa: 'mucTieu', thongBao: 'Mục tiêu phải ghi dạng JSON, ví dụ [{"giaiDoan":"2026","nguyenVan":">=10"}]' });
       if (r.chaTrongBo && !coMa[r.chaTrongBo]) loi.push({ dong: so, khoa: 'chaTrongBo', thongBao: 'Không có chỉ tiêu cha ' + r.chaTrongBo });
       cotChon.forEach(function (c) {
         var v = r[c.khoa];
@@ -120,13 +123,14 @@ var BoChiTieu = (function () {
   function _tap(s) { var o = {}, n = 0; s.split(' ').forEach(function (w) { if (w && !o[w]) { o[w] = 1; n++; } }); return { s: o, n: n }; }
 
   // Giá trị so sánh của một ô (rỗng thống nhất, mảng/đối tượng theo JSON).
-  function _gt(v) { return (v === undefined || v === null) ? '' : (typeof v === 'object' ? JSON.stringify(v) : String(v)); }
+  // Mảng rỗng coi như ô trống (sheet lưu '' cho mucTieu không có mục tiêu; file thiếu cột cũng là trống).
+  function _gt(v) { return (v === undefined || v === null || (Array.isArray(v) && !v.length)) ? '' : (typeof v === 'object' ? JSON.stringify(v) : String(v)); }
 
   // Kế hoạch nhập lại bộ: so dòng đang có với dòng mới theo maTrongBo.
   function keHoachNhap(daCo, moi) {
     var cot = SoDo.BANG[BANG].cot.filter(function (c) { return !c.heThong && !c.khoaChinh; }).map(function (c) { return c.khoa; });
     var cu = {}; daCo.forEach(function (r) { cu[r.maTrongBo] = chuanHoaDong(r); });
-    var thay = {}, them = [], sua = [], giuNguyen = 0;
+    var thay = {}, them = [], sua = [], giuNguyen = 0, boGhep = [];
     moi.forEach(function (r0) {
       var r = chuanHoaDong(r0); thay[r.maTrongBo] = true;
       var c = cu[r.maTrongBo];
@@ -138,10 +142,16 @@ var BoChiTieu = (function () {
         if (_gt(r[k]) !== _gt(c[k])) td[k] = r[k] === undefined ? '' : r[k];
       });
       if (c.tinhTrangHieuLuc === 'Hết hiệu lực') td.tinhTrangHieuLuc = 'Còn hiệu lực';
+      // Dòng đã ghép mà đổi tên (ví dụ khóa dòng không số bị dịch khi văn bản chèn dòng mới): bỏ ghép để số liệu
+      // không gắn nhầm chỉ tiêu chuẩn; file ghi rõ maChiTieu thì theo file. Người dùng ghép lại nếu vẫn cùng nội hàm.
+      if (td.tenNguyenVan !== undefined && _gt(c.maChiTieu) !== '' && _gt(r.maChiTieu) === '') {
+        td.maChiTieu = '';
+        boGhep.push({ ma: r.maTrongBo, maChiTieu: c.maChiTieu, tenCu: c.tenNguyenVan, tenMoi: r.tenNguyenVan });
+      }
       if (Object.keys(td).length) sua.push({ ma: r.maTrongBo, thayDoi: td }); else giuNguyen++;
     });
     var het = daCo.filter(function (r) { return !thay[r.maTrongBo] && r.tinhTrangHieuLuc !== 'Hết hiệu lực'; }).map(function (r) { return r.maTrongBo; });
-    return { them: them, sua: sua, hetHieuLuc: het, giuNguyen: giuNguyen };
+    return { them: them, sua: sua, hetHieuLuc: het, giuNguyen: giuNguyen, boGhep: boGhep };
   }
 
   // Mức liên quan cấp xã gợi ý từ cấp dữ liệu.

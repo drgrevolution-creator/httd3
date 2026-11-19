@@ -82,6 +82,19 @@ HTTD3.nhapChiTieu = (function () {
         el('div', { class: 'chip-loc', 'data-test': 'tom-tat' }, [chip('Thêm', kh.soThem, 'so-them'), chip('Sửa', kh.soSua, 'so-sua'), chip('Hết hiệu lực', kh.soHetHieuLuc, 'so-het', 'do'), chip('Giữ nguyên', kh.giuNguyen, 'so-giu')]),
         soGoiY ? el('p', { class: 'goi-y', text: soGoiY + ' dòng có gợi ý ghép với chỉ tiêu chuẩn đã có — ghép sau khi duyệt danh sách đề xuất, hệ thống không tự ghép.' }) : null
       ]));
+      var tenCot = x.tenCot || {};
+      if (x.boGhep && x.boGhep.length) {
+        vungKetQua.appendChild(el('section', { class: 'the canh-bao-het' }, [
+          el('p', { class: 'loi', text: x.boGhep.length + ' chỉ tiêu đã ghép nội hàm nhưng đổi tên trong file này — sẽ BỎ GHÉP để số liệu không gắn nhầm. Kiểm tra lại, nếu vẫn cùng nội hàm thì ghép lại sau khi nhập:' }),
+          el('ul', { 'data-test': 'bo-ghep' }, x.boGhep.map(function (g) { return el('li', { text: g.ma + ': "' + g.tenCu + '" → "' + g.tenMoi + '" (đang ghép ' + g.maChiTieu + ')' }); }))
+        ]));
+      }
+      if (x.chiTietSua && x.chiTietSua.length) {
+        vungKetQua.appendChild(el('details', { class: 'the', 'data-test': 'chi-tiet-sua' }, [
+          el('summary', { text: 'Xem ' + kh.soSua + ' dòng sẽ sửa và cột thay đổi' }),
+          el('ul', {}, x.chiTietSua.map(function (s) { return el('li', { text: s.ma + ': ' + s.cot.map(function (k) { return tenCot[k] || k; }).join(', ') }); }))
+        ]));
+      }
       if (loi.length) {
         vungKetQua.appendChild(el('section', { class: 'the' }, [
           el('h2', { class: 'loi', text: loi.length + ' lỗi — sửa trong file rồi chọn lại' }),
@@ -138,7 +151,7 @@ HTTD3.nhapChiTieu = (function () {
       var d = trang.duLieu;
       nutGhi.disabled = true; nutGhi.setAttribute('aria-busy', 'true');
       api.goiApi('chiTieu.nhap', { bo: d.bo, dong: d.dong, cheDo: 'ghi', canCu: oCanCu.value.trim() }).then(function (kq) {
-        ui.thongBao('Đã nhập ' + d.dong.length + ' chỉ tiêu vào bộ ' + kq.maBo + ': thêm ' + kq.soThem + ', sửa ' + kq.soSua + ', hết hiệu lực ' + kq.soHetHieuLuc + ', giữ nguyên ' + kq.giuNguyen + '.', 'thanh-cong');
+        ui.thongBao('Đã nhập ' + d.dong.length + ' chỉ tiêu vào bộ ' + kq.maBo + ': thêm ' + kq.soThem + ', sửa ' + kq.soSua + ', hết hiệu lực ' + kq.soHetHieuLuc + ', giữ nguyên ' + kq.giuNguyen + (kq.soBoGhep ? ', bỏ ghép ' + kq.soBoGhep : '') + '.', 'thanh-cong');
         trang.duLieu = null; trang.xemTruoc = null; oFile.value = '';
         if (HTTD3.chiTieu) HTTD3.chiTieu.lamMoi();
         vungKetQua.innerHTML = '';

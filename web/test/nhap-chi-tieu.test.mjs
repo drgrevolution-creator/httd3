@@ -31,6 +31,8 @@ test('nhập bộ chỉ tiêu: xem trước 10 dòng giữ số 0 đầu, ghi, r
     await page.waitForFunction(() => /Sửa 1/.test(document.querySelector('[data-test="tom-tat"]')?.textContent || ''));
     assert.match(await tomTat(page), /Giữ nguyên 9/);
     assert.match(await tomTat(page), /Thêm 0/);
+    const ctSua = await page.textContent('[data-test="chi-tiet-sua"]');
+    assert.match(ctSua, /LUAT-TK:0103/); assert.match(ctSua, /Tên chỉ tiêu/);
 
     // File thiếu một dòng so với bộ đang có → phải xác nhận "Hết hiệu lực" mới được ghi.
     await page.setInputFiles('[data-test="chon-file"]', path.join(MAU, 'LUAT-TK-9.xlsx'));

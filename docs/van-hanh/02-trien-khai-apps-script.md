@@ -78,8 +78,9 @@ Mỗi giai đoạn mới có thể thêm bảng (sheet) hoặc cột mới. Vì 
 3. **Chạy lại thiết lập.** Trong trang Apps Script, mở file `ketnoi/ThietLap`, chọn hàm **chayThietLapLanDau**, bấm **Run**. Đọc **Execution log**:
    - Phải thấy dòng `Gieo DM_BoChiTieu: 5 dòng` và dòng `Tài khoản quản trị đã có, không tạo lại`. Lần chạy lại này **không** in mật khẩu tạm mới; mật khẩu đang dùng giữ nguyên.
    - Mở file `HTTD3_DuLieu` trên Drive: có sheet mới `ChiTieu_TrongBo`; sheet cũ `ChiTieu_NguonQuyDinh` (trống) không còn. File `HTTD3_DanhMuc` có sheet mới `DM_BoChiTieu` gồm 5 bộ.
-   - Nếu có dòng **"CẢNH BÁO <tên bảng>: tiêu đề hiện có khác sơ đồ, không ghi đè vì sheet đã có dữ liệu"**: hệ thống **chưa** thêm cột mới cho bảng đó, để bảo vệ dữ liệu đang có. Dừng lại, chụp log gửi Claude. Không tự sửa tiêu đề.
-4. **Kiểm tra.** Chọn hàm **chayKiemTraThietLap** → **Run** → log phải in `{"thieu":[]}`.
+   - Nếu bảng `DM_ChiTieu` đã có dòng từ giai đoạn 1, log có dòng **"Đã bổ sung 11 cột cho DM_ChiTieu (giữ nguyên dữ liệu): …"**. Đây là bình thường: hệ thống chèn cột mới đúng chỗ, dữ liệu cũ dịch theo, không mất gì.
+   - Nếu có dòng **"CẢNH BÁO <tên bảng>: tiêu đề hiện có khác sơ đồ, không ghi đè vì sheet đã có dữ liệu"**: tiêu đề sheet đó đã bị sửa tay nên hệ thống không tự chuyển được. Để bảo vệ dữ liệu, mọi thao tác đọc/ghi bảng đó sẽ báo "có tiêu đề cột khác sơ đồ" cho đến khi được xử lý. Dừng lại, chụp log gửi Claude. Không tự sửa tiêu đề.
+4. **Kiểm tra.** Chọn hàm **chayKiemTraThietLap** → **Run** → log phải in `{"thieu":[]}`. Hàm này kiểm cả tiêu đề từng sheet; nếu thấy `"tiêu đề <tên bảng>"` trong danh sách, xem lại bước 3.
 5. **Triển khai phiên bản mới** theo Phần 5 (Manage deployments → bút chì → **New version** → Deploy). URL giữ nguyên.
 6. **Trang web** trên GitHub Pages tự cập nhật sau khi Claude gộp mã vào nhánh `main`, thường trong 1–2 phút. Mở trang, bấm Ctrl+F5 (trên điện thoại: kéo xuống để tải lại). Menu phải có thêm mục **📊 Chỉ tiêu**.
 

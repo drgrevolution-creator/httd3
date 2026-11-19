@@ -6,6 +6,7 @@ var ChiTieuGas = (function () {
   function _loi(ma, thongBao, chiTiet) { return KhoDuLieu._loi(ma, thongBao, chiTiet); }
   var BANG = 'ChiTieu_TrongBo';
   var NAM_TRUONG = ['khaiNiemPhuongPhapTinh', 'phanToChuYeu', 'kyCongBo', 'nguonSoLieu', 'coQuanChuTriThuThap', 'coQuanPhoiHopThuThap'];
+  var NAM_TRUONG_CHUAN = ['khaiNiemPhuongPhapTinh', 'phanToChuYeu', 'kyCongBo', 'nguonSoLieuNoiDung', 'coQuanChuTriThuThap', 'coQuanPhoiHopThuThap'];
   var GIOI_HAN_THAN = 900000;
 
   function _sach(r) { if (!r) return r; var o = Object.assign({}, r); delete o.__dong; return o; }
@@ -23,11 +24,26 @@ var ChiTieuGas = (function () {
         var e = dem[r.maBo] || (dem[r.maBo] = { so: 0, xa: 0 });
         e.so++; if (/Xã/.test(String(r.capDuLieu || ''))) e.xa++;
       });
-      return { bo: KhoDuLieu.docBang('DM_BoChiTieu').map(function (b) {
-        var e = dem[b.maBo] || { so: 0, xa: 0 }, o = _sach(b);
-        o.soChiTieu = e.so; o.soCapXa = e.xa;
-        return o;
-      }) };
+      // Chỉ tiêu chuẩn (một nội hàm một mã) kèm các bộ và dòng đang ghép (dòng còn hiệu lực).
+      var ghep = {};
+      ds.forEach(function (r) {
+        if (!_conHieuLuc(r) || _rong(r.maChiTieu)) return;
+        (ghep[r.maChiTieu] || (ghep[r.maChiTieu] = [])).push({ maTrongBo: r.maTrongBo, maBo: r.maBo, tenNguyenVan: r.tenNguyenVan });
+      });
+      return {
+        bo: KhoDuLieu.docBang('DM_BoChiTieu').map(function (b) {
+          var e = dem[b.maBo] || { so: 0, xa: 0 }, o = _sach(b);
+          o.soChiTieu = e.so; o.soCapXa = e.xa;
+          return o;
+        }),
+        chuan: KhoDuLieu.docBang('DM_ChiTieu').map(function (c) {
+          var o = _sach(c), dg = ghep[c.maChiTieu] || [], cacBo = [];
+          NAM_TRUONG_CHUAN.forEach(function (k) { delete o[k]; });
+          dg.forEach(function (x) { if (cacBo.indexOf(x.maBo) < 0) cacBo.push(x.maBo); });
+          o.cacBo = cacBo.sort(); o.soBo = cacBo.length; o.cacDong = dg;
+          return o;
+        })
+      };
     }
     var bo = KhoDuLieu.timDong('DM_BoChiTieu', maBo);
     if (!bo || bo.tinhTrang === 'Xóa mềm') throw _loi('KHONG_TIM_THAY', 'Không có bộ chỉ tiêu ' + maBo);
@@ -94,7 +110,7 @@ var ChiTieuGas = (function () {
       dong.forEach(function (r, i) { if (r.maBo !== maBo) kt.loi.push({ dong: i + 1, khoa: 'maBo', thongBao: 'Dòng ghi bộ ' + r.maBo + ', không phải ' + maBo }); });
       kt.loi = kb.loi.concat(kt.loi); kt.hopLe = kt.loi.length === 0;
       var kh = BoChiTieu.keHoachNhap(daCo, dong);
-      var tomTat = { soThem: kh.them.length, soSua: kh.sua.length, soHetHieuLuc: kh.hetHieuLuc.length, giuNguyen: kh.giuNguyen };
+      var tomTat = { soThem: kh.them.length, soSua: kh.sua.length, soHetHieuLuc: kh.hetHieuLuc.length, giuNguyen: kh.giuNguyen, soBoGhep: kh.boGhep.length };
 
       if (d.cheDo !== 'ghi') {
         var chuan = KhoDuLieu.docBang('DM_ChiTieu').map(function (c) { return { maChiTieu: c.maChiTieu, tenChiTieu: c.tenChiTieu }; });
@@ -105,7 +121,9 @@ var ChiTieuGas = (function () {
           var g = BoChiTieu.goiYGhep(r.tenNguyenVan, chuan);
           if (g.length) goiY[r.maTrongBo] = g;
         });
-        return { kiemTra: kt, keHoach: tomTat, goiYGhep: goiY };
+        var chiTietSua = kh.sua.slice(0, 500).map(function (s) { return { ma: s.ma, cot: Object.keys(s.thayDoi) }; });
+        var tenCot = {}; SoDo.BANG[BANG].cot.forEach(function (c) { tenCot[c.khoa] = c.ten; });
+        return { kiemTra: kt, keHoach: tomTat, goiYGhep: goiY, chiTietSua: chiTietSua, boGhep: kh.boGhep, tenCot: tenCot };
       }
 
       if (!kt.hopLe) throw _loi('DU_LIEU_KHONG_HOP_LE', kt.loi.length + ' lỗi, chưa ghi dòng nào: ' + kt.loi.slice(0, 5).map(function (l) { return (l.dong ? 'dòng ' + l.dong + ': ' : '') + l.thongBao; }).join('; '), kt.loi);
@@ -120,7 +138,7 @@ var ChiTieuGas = (function () {
         if (Number(kb.boCu.soChiTieu) !== soConHieuLuc) td.soChiTieu = soConHieuLuc; else delete td.soChiTieu;
         if (Object.keys(td).length) KhoDuLieu.capNhatDong('DM_BoChiTieu', maBo, td, phien, canCu);
       }
-      return { maBo: maBo, soThem: kq.soThem, soSua: kh.sua.length, soHetHieuLuc: het.length, giuNguyen: kh.giuNguyen };
+      return { maBo: maBo, soThem: kq.soThem, soSua: kh.sua.length, soHetHieuLuc: het.length, giuNguyen: kh.giuNguyen, soBoGhep: kh.boGhep.length };
     });
   }
 

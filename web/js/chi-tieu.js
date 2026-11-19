@@ -10,7 +10,8 @@ HTTD3.chiTieu = (function () {
     ['kyCongBo', '3. Kỳ công bố'],
     ['nguonSoLieu', '4. Nguồn số liệu']
   ];
-  var _boChon = null, _dsBo = null, _dongCuaBo = {}, _loc = { capXa: false, linhVuc: '', tim: '' }, _thuGon = {};
+  var _boChon = null, _dsBo = null, _dsChuan = [], _dongCuaBo = {}, _loc = { capXa: false, linhVuc: '', tim: '' }, _thuGon = {};
+  var _cheDo = 'bo', _timChuan = '';
 
   function laQT(trangThai) { return (trangThai.vaiTro || []).indexOf('QUANTRI') >= 0; }
   function rong(v) { return v === undefined || v === null || String(v).trim() === ''; }
@@ -52,18 +53,91 @@ HTTD3.chiTieu = (function () {
     ]);
     if (laQT(trangThai)) dau.appendChild(el('a', { class: 'nut nut-phu', href: '#/chi-tieu/nhap', 'data-test': 'nut-nhap-file', text: '📥 Nhập từ file' }));
     goc.appendChild(dau);
-    var trai = el('div', { class: 'danh-sach-chon the danh-sach-bo', 'data-test': 'danh-sach-bo' }, [el('p', { class: 'dang-tai', text: 'Đang tải…' })]);
-    var phai = el('div', { class: 'cot-phai' });
-    goc.appendChild(el('div', { class: 'hai-cot' }, [trai, phai]));
+    var vung = el('div');
+    function chonCheDo(cd) { _cheDo = cd; nutBo.setAttribute('aria-pressed', cd === 'bo' ? 'true' : 'false'); nutChuan.setAttribute('aria-pressed', cd === 'chuan' ? 'true' : 'false'); veCheDo(vung, trangThai); }
+    var nutBo = el('button', { type: 'button', 'data-test': 'tab-theo-bo', 'aria-pressed': _cheDo === 'bo' ? 'true' : 'false', text: 'Theo bộ', onclick: function () { chonCheDo('bo'); } });
+    var nutChuan = el('button', { type: 'button', 'data-test': 'tab-chuan', 'aria-pressed': _cheDo === 'chuan' ? 'true' : 'false', text: 'Chỉ tiêu chuẩn', onclick: function () { chonCheDo('chuan'); } });
+    goc.appendChild(el('div', { class: 'chip-loc tab-che-do', role: 'group', 'aria-label': 'Cách xem' }, [nutBo, nutChuan]));
+    goc.appendChild(vung);
+    vung.appendChild(el('p', { class: 'dang-tai', text: 'Đang tải…' }));
     api.goiApi('chiTieu.doc', {}).then(function (kq) {
-      _dsBo = kq.bo || [];
+      _dsBo = kq.bo || []; _dsChuan = kq.chuan || [];
+      veCheDo(vung, trangThai);
+    }).catch(function (e) { vung.innerHTML = ''; vung.appendChild(el('p', { class: 'loi', text: e.message })); });
+  }
+
+  function veCheDo(vung, trangThai) {
+    vung.innerHTML = '';
+    if (_dsBo === null) return;
+    if (_cheDo === 'chuan') { veChuan(vung, trangThai); return; }
+    var trai = el('div', { class: 'danh-sach-chon the danh-sach-bo', 'data-test': 'danh-sach-bo' });
+    var phai = el('div', { class: 'cot-phai' });
+    vung.appendChild(el('div', { class: 'hai-cot' }, [trai, phai]));
+    (function () {
       if (!_boChon || !_dsBo.some(function (b) { return b.maBo === _boChon; })) {
         var coDong = _dsBo.filter(function (b) { return b.soChiTieu > 0; });
         _boChon = (coDong[0] || _dsBo[0] || {}).maBo || null;
       }
       veDanhSachBo(trai, phai, trangThai);
       veBo(phai, trangThai);
-    }).catch(function (e) { trai.innerHTML = ''; trai.appendChild(el('p', { class: 'loi', text: e.message })); });
+    })();
+  }
+
+  // ----- Chỉ tiêu chuẩn: một nội hàm một mã, mỗi dòng cho biết thuộc bao nhiêu bộ -----
+  function veChuan(vung, trangThai) {
+    var oTim = el('input', { type: 'search', class: 'o-nhap o-loc', 'data-test': 'tim-chuan', placeholder: 'Tìm theo tên hoặc mã', 'aria-label': 'Tìm chỉ tiêu chuẩn', value: _timChuan });
+    var khung = el('div', { class: 'cuon-ngang' });
+    vung.appendChild(el('section', { class: 'the' }, [
+      el('p', { class: 'phu', text: 'Mỗi chỉ tiêu chuẩn là một nội hàm, dùng chung cho các bộ đã ghép. Số liệu (giai đoạn sau) gắn vào chỉ tiêu chuẩn.' }),
+      el('div', { class: 'thanh-loc' }, [oTim, el('span', { class: 'phu', text: _dsChuan.length + ' chỉ tiêu chuẩn' })])
+    ]));
+    vung.appendChild(khung);
+    function veBangChuan() {
+      var t = boDau(_timChuan);
+      var ds = _dsChuan.filter(function (c) { return !t || boDau(c.tenChiTieu).indexOf(t) >= 0 || boDau(c.maChiTieu).indexOf(t) >= 0; });
+      khung.innerHTML = '';
+      if (!_dsChuan.length) { khung.appendChild(el('p', { class: 'rong', text: 'Chưa có chỉ tiêu chuẩn nào. Ghép nội hàm ở màn "Theo bộ" để tạo.' })); return; }
+      khung.appendChild(el('table', { class: 'bang', 'data-test': 'bang-chuan' }, [
+        el('thead', {}, [el('tr', {}, ['Mã', 'Tên chỉ tiêu', 'Lĩnh vực lớn', 'Liên quan xã', 'Số bộ', 'Thuộc các bộ'].map(function (h) { return el('th', { scope: 'col', text: h }); }))]),
+        el('tbody', {}, ds.map(function (c) {
+          return el('tr', { 'data-ma': c.maChiTieu, tabindex: '0', onclick: function () { moChuan(c, trangThai); }, onkeydown: function (ev) { if (ev.key === 'Enter') moChuan(c, trangThai); } }, [
+            el('td', { class: 'ma', text: c.maChiTieu }), el('td', { text: c.tenChiTieu || '' }), el('td', { text: c.linhVucLon || '' }),
+            el('td', { text: c.mucLienQuanCapXa || '' }), el('td', { 'data-cot': 'soBo', text: String(c.soBo || 0) }), el('td', { text: (c.cacBo || []).join(', ') })
+          ]);
+        }))
+      ]));
+    }
+    var hen = null;
+    oTim.addEventListener('input', function () { clearTimeout(hen); hen = setTimeout(function () { _timChuan = oTim.value.trim(); veBangChuan(); }, 150); });
+    veBangChuan();
+  }
+
+  function moChuan(c, trangThai) {
+    var khung = el('div', { class: 'chi-tiet-chi-tieu' });
+    ui.moTamTruot('Chỉ tiêu chuẩn ' + c.maChiTieu, khung);
+    khung.appendChild(el('h3', { class: 'ten-chi-tieu', text: c.tenChiTieu || '' }));
+    khung.appendChild(el('div', { class: 'luoi-tt' }, [dongTT('Lĩnh vực lớn', c.linhVucLon), dongTT('Cấp dữ liệu', c.capDuLieu), dongTT('Mức liên quan cấp xã', c.mucLienQuanCapXa), dongTT('Kỳ báo cáo xã', c.kyBaoCaoXa)].filter(Boolean)));
+    var dg = c.cacDong || [];
+    khung.appendChild(el('section', { class: 'muc-chi-tiet' }, [
+      el('h3', { text: 'Đang ghép ở ' + (c.soBo || 0) + ' bộ' }),
+      dg.length ? el('ul', { 'data-test': 'dong-ghep' }, dg.map(function (x) {
+        var b = (_dsBo || []).find(function (y) { return y.maBo === x.maBo; }) || { maBo: x.maBo };
+        return el('li', {}, [el('button', { type: 'button', class: 'nut-lien-ket', text: x.maTrongBo + ' — ' + x.tenNguyenVan, onclick: function () { moChiTiet(x.maTrongBo, b, trangThai); } })]);
+      })) : el('p', { class: 'phu', 'data-test': 'dong-ghep', text: 'Chưa có dòng nào ghép với chỉ tiêu này.' })
+    ]));
+    var vungND = el('div', {}, dg.length ? [el('p', { class: 'dang-tai', text: 'Đang tải nội dung…' })] : []);
+    khung.appendChild(vungND);
+    if (!dg.length) return;
+    api.goiApi('chiTieu.chiTiet', { maTrongBo: dg[0].maTrongBo }).then(function (kq) {
+      var ch = kq.chuan || {};
+      vungND.innerHTML = '';
+      [['khaiNiemPhuongPhapTinh', '1. Khái niệm, phương pháp tính'], ['phanToChuYeu', '2. Phân tổ chủ yếu'], ['kyCongBo', '3. Kỳ công bố'], ['nguonSoLieuNoiDung', '4. Nguồn số liệu']].forEach(function (m) {
+        vungND.appendChild(el('section', { class: 'muc-chi-tiet' }, [el('h3', { text: m[1] }), doanNoiDung(ch[m[0]])]));
+      });
+      vungND.appendChild(el('section', { class: 'muc-chi-tiet' }, [el('h3', { text: '5. Cơ quan chịu trách nhiệm thu thập, tổng hợp' }),
+        el('div', { class: 'dong-tt' }, [el('span', { class: 'nhan-tt', text: 'Chủ trì:' }), doanNoiDung(ch.coQuanChuTriThuThap)]),
+        el('div', { class: 'dong-tt' }, [el('span', { class: 'nhan-tt', text: 'Phối hợp:' }), doanNoiDung(ch.coQuanPhoiHopThuThap)])]));
+    }).catch(function (e) { vungND.innerHTML = ''; vungND.appendChild(el('p', { class: 'loi', text: e.message })); });
   }
 
   function veDanhSachBo(trai, phai, trangThai) {
@@ -240,6 +314,7 @@ HTTD3.chiTieu = (function () {
       ui.ban(nutLuu, api.goiApi('chiTieu.ghep', d).then(function () {
         ui.thongBao('Đã ghép ' + r.maTrongBo + ' với ' + (d.maChiTieu || d.taoMoi.maChiTieu), 'thanh-cong');
         delete _dongCuaBo[b.maBo];
+        api.goiApi('chiTieu.doc', {}).then(function (kq) { _dsBo = kq.bo || _dsBo; _dsChuan = kq.chuan || _dsChuan; }).catch(function () { /* làm mới lần sau */ });
         moChiTiet(r.maTrongBo, b, trangThai);
       }).catch(function (e) { ui.thongBao(e.message, 'loi'); }));
     });

@@ -159,3 +159,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .dong-tt { display: grid; grid-template-columns: minmax(110px, 38%) 1fr; gap: var(--space-2); padding: 2px 0; }
 .dong-tt .nhan-tt { color: var(--color-text-secondary); font-size: var(--font-size-sm); }
 .bieu-mau-ghep { margin-top: var(--space-3); }
+.tab-che-do { margin-bottom: var(--space-3); }
+.nut-lien-ket { background: none; border: 0; padding: 2px 0; color: var(--color-action-primary); cursor: pointer; text-align: left; font: inherit; }
+.nut-lien-ket:hover { text-decoration: underline; }
+details.the summary { cursor: pointer; font-weight: 600; }
