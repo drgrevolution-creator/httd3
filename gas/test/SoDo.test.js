@@ -53,3 +53,29 @@ test('mỗi bảng có tên hiển thị, khóa cột không trùng, ref trỏ t
   }
   assert.ok(SoDo.BANG.BoDem && SoDo.BANG.NhatKy && SoDo.BANG.PhienDangNhap);
 });
+
+test('1b: ChiTieu_TrongBo có khóa maTrongBo, đủ sáu cột năm trường, tham chiếu đúng', () => {
+  const { SoDo } = taiThuan();
+  const b = SoDo.BANG.ChiTieu_TrongBo;
+  assert.ok(b && b.file === 'HTTD3_DuLieu' && b.nhom === 'nghiepvu' && b.dinhDangMa === 'TU_NHAP');
+  assert.equal(SoDo.khoaChinh('ChiTieu_TrongBo'), 'maTrongBo');
+  for (const k of ['khaiNiemPhuongPhapTinh', 'phanToChuYeu', 'kyCongBo', 'nguonSoLieu', 'coQuanChuTriThuThap', 'coQuanPhoiHopThuThap']) assert.ok(SoDo.cot('ChiTieu_TrongBo', k), 'thiếu ' + k);
+  assert.equal(SoDo.cot('ChiTieu_TrongBo', 'maBo').thamChieu, 'DM_BoChiTieu');
+  assert.equal(SoDo.cot('ChiTieu_TrongBo', 'maChiTieu').thamChieu, 'DM_ChiTieu');
+  assert.equal(SoDo.cot('ChiTieu_TrongBo', 'chaTrongBo').thamChieu, 'ChiTieu_TrongBo');
+  assert.equal(SoDo.cot('ChiTieu_TrongBo', 'mucTieu').kieu, 'json');
+  assert.deepEqual([...SoDo.cot('ChiTieu_TrongBo', 'thuocTinhTongHop').tuyChon], ['Tỷ lệ', 'Lũy kế từ đầu năm', 'Thời điểm', 'Phát sinh trong kỳ']);
+  assert.deepEqual([...SoDo.cot('ChiTieu_TrongBo', 'capDuLieu').tuyChon], ['Trung ương', 'Thành phố', 'Xã', 'Thành phố/Xã']);
+  assert.equal(SoDo.BANG.ChiTieu_NguonQuyDinh, undefined);
+});
+
+test('1b: DM_BoChiTieu bốn loại hệ thống; DM_ChiTieu có cột mới trước cột hệ thống', () => {
+  const { SoDo } = taiThuan();
+  assert.equal(SoDo.khoaChinh('DM_BoChiTieu'), 'maBo');
+  assert.equal(SoDo.BANG.DM_BoChiTieu.nhom, 'danhmuc');
+  assert.deepEqual([...SoDo.cot('DM_BoChiTieu', 'loaiHeThong').tuyChon], ['Quốc gia', 'Bộ, ngành', 'Địa phương', 'Theo dõi, đánh giá']);
+  const ks = SoDo.BANG.DM_ChiTieu.cot.map((c) => c.khoa);
+  for (const k of ['chaChiTieu', 'linhVucLon', 'thuocTinhTongHop', 'capDuLieu', 'kyBaoCaoXa', 'khaiNiemPhuongPhapTinh', 'coQuanPhoiHopThuThap']) assert.ok(ks.includes(k), 'thiếu ' + k);
+  assert.ok(ks.indexOf('coQuanPhoiHopThuThap') < ks.indexOf('maThanhPho'), 'cột mới phải đứng trước cột hệ thống');
+  assert.ok(SoDo.cot('DM_ChiTieu', 'linhVucLon').tuyChon.includes('Thông tin chung'));
+});

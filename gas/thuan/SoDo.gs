@@ -9,6 +9,10 @@ var SoDo = (function () {
   var TINH_TRANG = ['Hoạt động', 'Ngừng', 'Xóa mềm'];
   var TINH_TRANG_AP_DUNG = ['Đang áp dụng', 'Hết hiệu lực', 'Dự thảo'];
   var CO_QUAN = ['Trung ương', 'Thành phố', 'Ngành', 'Xã'];
+  var THUOC_TINH_TONG_HOP = ['Tỷ lệ', 'Lũy kế từ đầu năm', 'Thời điểm', 'Phát sinh trong kỳ'];
+  var CAP_DU_LIEU = ['Trung ương', 'Thành phố', 'Xã', 'Thành phố/Xã'];
+  var LOAI_HE_THONG = ['Quốc gia', 'Bộ, ngành', 'Địa phương', 'Theo dõi, đánh giá'];
+  var LINH_VUC_LON = ['Thông tin chung', 'Kinh tế', 'Văn hóa – xã hội', 'Đô thị, môi trường', 'Cải cách hành chính', 'Quốc phòng – an ninh', 'Xây dựng Đảng', 'Hệ thống chính trị', 'Khác'];
 
   // Tạo một mô tả cột. them = {batBuoc, khoaChinh, tuyChon, thamChieu, an, macDinh}
   function c(khoa, ten, kieu, them) {
@@ -57,7 +61,12 @@ var SoDo = (function () {
     sel('nhom', 'Nhóm (CĐS)', ['Chính quyền số', 'Kinh tế số', 'Xã hội số', 'Ngành, lĩnh vực']),
     sel('chieuDanhGia', 'Chiều đánh giá', ['Càng cao càng tốt', 'Càng thấp càng tốt']),
     sel('mucLienQuanCapXa', 'Mức liên quan cấp xã', ['A', 'B', 'C']), ref('donViChuTriTaiXa', 'Đơn vị chủ trì tại xã', 'DM_DonVi'),
-    msRef('donViPhoiHop', 'Đơn vị phối hợp', 'DM_DonVi'), c('tanSuatTheoDoi', 'Tần suất theo dõi'), ta('ghiChuKhacBiet', 'Ghi chú / khác biệt giữa các văn bản')
+    msRef('donViPhoiHop', 'Đơn vị phối hợp', 'DM_DonVi'), c('tanSuatTheoDoi', 'Tần suất theo dõi'), ta('ghiChuKhacBiet', 'Ghi chú / khác biệt giữa các văn bản'),
+    // Giai đoạn 1b: cây, phân loại và năm trường nội dung "chuẩn"
+    ref('chaChiTieu', 'Thuộc chỉ tiêu cha', 'DM_ChiTieu'), sel('linhVucLon', 'Lĩnh vực lớn', LINH_VUC_LON), sel('thuocTinhTongHop', 'Thuộc tính tổng hợp', THUOC_TINH_TONG_HOP),
+    sel('capDuLieu', 'Cấp dữ liệu', CAP_DU_LIEU), c('kyBaoCaoXa', 'Kỳ báo cáo cấp xã'),
+    ta('khaiNiemPhuongPhapTinh', '1. Khái niệm, phương pháp tính'), ta('phanToChuYeu', '2. Phân tổ chủ yếu'), c('kyCongBo', '3. Kỳ công bố'),
+    ta('nguonSoLieuNoiDung', '4. Nguồn số liệu'), ta('coQuanChuTriThuThap', '5. Cơ quan thu thập, tổng hợp — Chủ trì'), ta('coQuanPhoiHopThuThap', '5. Cơ quan thu thập, tổng hợp — Phối hợp')
   ]));
 
   bang('DM_ChiSo', DM, 'danhmuc', 'CS', 'TU_NHAP', 'KPI, chỉ số đánh giá', [
@@ -147,6 +156,13 @@ var SoDo = (function () {
   ]);
 
   // ===== DANH MỤC ĐỊA PHƯƠNG =====
+  bang('DM_BoChiTieu', DM, 'danhmuc', 'BO', 'TU_NHAP', 'Bộ chỉ tiêu', [
+    kc('maBo', 'Mã bộ'), bb('tenBo', 'Tên bộ chỉ tiêu'), bb('loaiHeThong', 'Loại hệ thống', 'select', { tuyChon: LOAI_HE_THONG }),
+    ref('vanBanBanHanh', 'Văn bản ban hành', 'DM_VanBan'), c('soKyHieuVanBan', 'Số ký hiệu văn bản'), c('coQuanBanHanh', 'Cơ quan ban hành'),
+    sel('capApDung', 'Cấp áp dụng', ['Trung ương', 'Thành phố', 'Xã']), c('giaiDoan', 'Giai đoạn'), dt('hieuLucTu', 'Hiệu lực từ'), dt('hieuLucDen', 'Hiệu lực đến'),
+    ref('thayTheBo', 'Thay thế bộ', 'DM_BoChiTieu'), sel('tinhTrangApDung', 'Tình trạng áp dụng', TINH_TRANG_AP_DUNG, { macDinh: 'Đang áp dụng' }),
+    so('soChiTieu', 'Số chỉ tiêu'), ta('ghiChu', 'Ghi chú')
+  ]);
   bang('DM_DonVi', DM, 'danhmuc', 'DV', 'TU_NHAP', 'Đơn vị, đầu mối', [
     kc('maDonVi', 'Mã đầu mối'), bb('tenDayDu', 'Tên đầy đủ'), bb('tenVietTat', 'Tên viết tắt'), bb('nhom', 'Nhóm', 'select', { tuyChon: ['DV', 'TH', 'AP', 'NGOAI'] }),
     c('phanLoai', 'Phân loại'), c('nguoiLienHe', 'Người phụ trách'), c('email', 'Email', 'email'), c('dienThoai', 'Điện thoại'),
@@ -221,11 +237,17 @@ var SoDo = (function () {
     so('soDonViDaBC', 'Số đơn vị đã báo cáo'), c('donViChuaBC', 'Đơn vị chưa báo cáo'), so('phanTramChung', 'Phần trăm chung'), c('trangThaiChung', 'Trạng thái chung'),
     c('trangThaiDuyet', 'Trạng thái duyệt'), ta('ketQuaGhep', 'Kết quả ghép'), ta('vuongMacGhep', 'Vướng mắc ghép')
   ]);
-  bang('ChiTieu_NguonQuyDinh', DL, 'nghiepvu', 'NQ', 'SO-4', 'Nguồn quy định của chỉ tiêu', [
-    kc('maNguonQuyDinh', 'Mã'), bb('maChiTieu', 'Mã chỉ tiêu', 'ref', { thamChieu: 'DM_ChiTieu' }), bb('maVanBan', 'Mã văn bản', 'ref', { thamChieu: 'DM_VanBan' }), c('soHieuVanBan', 'Số hiệu văn bản'),
-    c('viTriTrongVanBan', 'Vị trí trong văn bản'), ta('nguyenVanChiTieu', 'Nguyên văn chỉ tiêu theo văn bản'), c('nguongNguyenVan', 'Ngưỡng (nguyên văn)'), so('nguongSo', 'Ngưỡng (số)'),
-    c('donViTinh', 'Đơn vị tính'), so('mocHoanThanhNam', 'Mốc hoàn thành (năm)'), c('coQuanChuTriDoLuong', 'Cơ quan chủ trì đo lường'), c('ghiChu', 'Ghi chú'),
-    sel('tinhTrangHieuLuc', 'Tình trạng hiệu lực', ['Còn hiệu lực', 'Hết hiệu lực'], { macDinh: 'Còn hiệu lực' }), ref('biThayTheBoi', 'Bị thay thế bởi (mã VB)', 'DM_VanBan'), dt('ngayCapNhat', 'Ngày cập nhật')
+  // Giai đoạn 1b: mỗi dòng = một chỉ tiêu trong một bộ (nguyên văn văn bản). Thay ChiTieu_NguonQuyDinh.
+  bang('ChiTieu_TrongBo', DL, 'nghiepvu', 'TB', 'TU_NHAP', 'Chỉ tiêu trong bộ', [
+    kc('maTrongBo', 'Mã trong bộ'), bb('maBo', 'Bộ chỉ tiêu', 'ref', { thamChieu: 'DM_BoChiTieu' }), c('maGoc', 'Mã gốc trong văn bản'), c('sttTrongBo', 'Số thứ tự trong văn bản'),
+    c('nhomMa', 'Mã nhóm'), c('nhomTen', 'Tên nhóm'), ref('chaTrongBo', 'Thuộc chỉ tiêu cha', 'ChiTieu_TrongBo'), bb('tenNguyenVan', 'Tên chỉ tiêu (nguyên văn)', 'textarea'),
+    ta('khaiNiemPhuongPhapTinh', '1. Khái niệm, phương pháp tính'), ta('phanToChuYeu', '2. Phân tổ chủ yếu'), c('kyCongBo', '3. Kỳ công bố'),
+    ta('nguonSoLieu', '4. Nguồn số liệu'), ta('coQuanChuTriThuThap', '5. Cơ quan thu thập, tổng hợp — Chủ trì'), ta('coQuanPhoiHopThuThap', '5. Cơ quan thu thập, tổng hợp — Phối hợp'),
+    c('donViTinh', 'Đơn vị tính'), sel('thuocTinhTongHop', 'Thuộc tính tổng hợp', THUOC_TINH_TONG_HOP), sel('capDuLieu', 'Cấp dữ liệu', CAP_DU_LIEU),
+    c('kyBaoCaoTP', 'Kỳ báo cáo cấp Thành phố'), c('kyBaoCaoXa', 'Kỳ báo cáo cấp xã'), c('thoiDiemChotSoLieu', 'Thời điểm chốt số liệu'),
+    c('mucTieu', 'Mục tiêu theo giai đoạn', 'json'), c('viTriTrongVanBan', 'Vị trí trong văn bản'), ta('canCuNguyenVan', 'Căn cứ (nguyên văn)'), ta('coQuanXacNhanSoLieu', 'Cơ quan xác nhận số liệu'),
+    ref('maChiTieu', 'Chỉ tiêu chuẩn (cùng nội hàm)', 'DM_ChiTieu'), sel('linhVucLon', 'Lĩnh vực lớn', LINH_VUC_LON),
+    sel('tinhTrangHieuLuc', 'Tình trạng hiệu lực', ['Còn hiệu lực', 'Hết hiệu lực'], { macDinh: 'Còn hiệu lực' }), ref('biThayTheBoi', 'Bị thay thế bởi', 'ChiTieu_TrongBo'), ta('ghiChu', 'Ghi chú')
   ]);
   bang('ChiTieu_PhanCong', DL, 'nghiepvu', 'PC', 'SO-4', 'Phân công nhập số liệu chỉ tiêu', [
     kc('maPhanCong', 'Mã'), bb('maChiTieu', 'Mã chỉ tiêu', 'ref', { thamChieu: 'DM_ChiTieu' }), c('tenChiTieu', 'Tên chỉ tiêu'), sel('nhomDauMoiNhap', 'Nhóm đầu mối nhập', ['DV', 'TH', 'AP', 'XA']),
@@ -307,5 +329,5 @@ var SoDo = (function () {
   // Mô tả một cột theo khóa.
   function cot(tenBang, khoa) { return BANG[tenBang].cot.filter(function (x) { return x.khoa === khoa; })[0]; }
 
-  return { FILE: FILE, KIEU: KIEU, TINH_TRANG: TINH_TRANG, BANG: BANG, khoaChinh: khoaChinh, cotHeThong: cotHeThong, danhSachBang: danhSachBang, cot: cot };
+  return { FILE: FILE, KIEU: KIEU, TINH_TRANG: TINH_TRANG, THUOC_TINH_TONG_HOP: THUOC_TINH_TONG_HOP, CAP_DU_LIEU: CAP_DU_LIEU, LOAI_HE_THONG: LOAI_HE_THONG, LINH_VUC_LON: LINH_VUC_LON, BANG: BANG, khoaChinh: khoaChinh, cotHeThong: cotHeThong, danhSachBang: danhSachBang, cot: cot };
 })();

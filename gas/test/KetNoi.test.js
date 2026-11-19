@@ -98,3 +98,18 @@ test('sao lưu đêm: thư mục sao lưu bị xóa hoặc Drive đầy → ghi 
   assert.ok(b.ctx.KhoDuLieu.docBang('SaoLuu').some((r) => r.ketQua === 'LOI'));
   assert.ok(b.ctx.__gia.mail.length >= 1);
 });
+
+test('1b: thiết lập lại xóa sheet ChiTieu_NguonQuyDinh trống, tạo ChiTieu_TrongBo, không ghi đè tiêu đề sheet đã có dữ liệu bị sửa tay', () => {
+  const { ctx } = thietLap();
+  const ss = ctx.KhoDuLieu._ss('HTTD3_DuLieu');
+  const cu = ss.insertSheet('ChiTieu_NguonQuyDinh'); cu.getRange(1, 1, 2, 2).setValues([['a', 'b'], ['A', 'B']]);
+  ss.deleteSheet(ss.getSheetByName('ChiTieu_TrongBo'));
+  const dv = ctx.KhoDuLieu._sheet('DM_DonVi');
+  dv.getRange(1, 1, 1, 1).setValues([['maDonViSuaTay']]);
+  const bc = ctx.ThietLap.thietLapLanDau({ emailQuanTri: 'qt@gmail.com', hoTenQuanTri: 'QT' });
+  assert.equal(ss.getSheetByName('ChiTieu_NguonQuyDinh'), null, 'sheet cũ trống phải bị xóa');
+  assert.ok(ss.getSheetByName('ChiTieu_TrongBo'));
+  assert.equal(dv.getRange(1, 1, 1, 1).getValues()[0][0], 'maDonViSuaTay', 'không được ghi đè tiêu đề sheet có dữ liệu');
+  assert.ok(bc.some((s) => /DM_DonVi/.test(s) && /tiêu đề/.test(s)), 'phải có cảnh báo tiêu đề lệch');
+  assert.equal(ctx.KhoDuLieu.docBang('DM_BoChiTieu').length, 5);
+});

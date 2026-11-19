@@ -85,6 +85,16 @@ var DuLieuGieo = (function () {
     ctr('KHNQ57', 'Kế hoạch thực hiện Nghị quyết 57-NQ/TW', 'CDS', 'KHNQ57', '')
   ];
 
+  // Giai đoạn 1b: năm bộ chỉ tiêu (dữ liệu chỉ tiêu nạp qua màn Nhập từ file mẫu chuẩn).
+  function bo(ma, ten, loai, soKyHieu, coQuan, cap, giaiDoan, tu, ghiChu) { return { maBo: ma, tenBo: ten, loaiHeThong: loai, soKyHieuVanBan: soKyHieu, coQuanBanHanh: coQuan, capApDung: cap, giaiDoan: giaiDoan, hieuLucTu: tu, tinhTrangApDung: 'Đang áp dụng', soChiTieu: 0, ghiChu: ghiChu || '' }; }
+  var DM_BoChiTieu = [
+    bo('LUAT-TK', 'Hệ thống chỉ tiêu thống kê quốc gia', 'Quốc gia', 'Phụ lục Luật Thống kê (VBHN 37/VBHN-VPQH)', 'Quốc hội', 'Trung ương', '', '2026-01-01', 'Nội dung chỉ tiêu theo NĐ 94/2022/NĐ-CP'),
+    bo('TT13-BNV', 'Hệ thống chỉ tiêu thống kê ngành Nội vụ', 'Bộ, ngành', '13/2025/TT-BNV', 'Bộ Nội vụ', 'Trung ương', '', '2025-07-04'),
+    bo('TT45-BKHCN', 'Hệ thống chỉ tiêu thống kê ngành Khoa học và Công nghệ', 'Bộ, ngành', '45/2025/TT-BKHCN', 'Bộ Khoa học và Công nghệ', 'Trung ương', '', '2025-12-15'),
+    bo('TU-699', 'Danh mục chỉ tiêu, chỉ số theo dõi, lãnh đạo, chỉ đạo của Thành ủy', 'Theo dõi, đánh giá', 'Phụ lục kèm CV 699-CV/TU', 'Thành ủy Thành phố Hồ Chí Minh', 'Thành phố', '2026-2030', ''),
+    bo('CDS-HN', 'Bộ chỉ tiêu hợp nhất về chuyển đổi số - kinh tế số - xã hội số', 'Theo dõi, đánh giá', 'QĐ 1266/QĐ-TTg; QĐ 2629/QĐ-TTg', 'UBND xã Phước Hải (hợp nhất)', 'Xã', '2026-2030', '', 'Chuyển từ HTTD 2.0 ở giai đoạn 5')
+  ];
+
   var CauHinh = [
     ['tenCoQuan', 'ỦY BAN NHÂN DÂN XÃ PHƯỚC HẢI', 'Tên cơ quan in trên báo cáo'],
     ['diaDanh', 'Phước Hải', 'Địa danh ghi ngày tháng văn bản'],
@@ -114,7 +124,7 @@ var DuLieuGieo = (function () {
   }
 
   return {
-    BANG: { DM_DonVi: DM_DonVi, DM_LinhVuc: DM_LinhVuc, DM_TrangThai: DM_TrangThai, DM_MucDo: DM_MucDo, DM_DonViDo: DM_DonViDo, DM_KyBaoCao: DM_KyBaoCao, DM_ChuongTrinh: DM_ChuongTrinh, CauHinh: CauHinh },
+    BANG: { DM_BoChiTieu: DM_BoChiTieu, DM_DonVi: DM_DonVi, DM_LinhVuc: DM_LinhVuc, DM_TrangThai: DM_TrangThai, DM_MucDo: DM_MucDo, DM_DonViDo: DM_DonViDo, DM_KyBaoCao: DM_KyBaoCao, DM_ChuongTrinh: DM_ChuongTrinh, CauHinh: CauHinh },
     cauTruc: cauTruc
   };
 })();

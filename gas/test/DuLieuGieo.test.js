@@ -47,3 +47,10 @@ test('DM_CauTruc sinh đủ cột của mọi danh mục', () => {
   assert.equal(ct.length, tong);
   assert.ok(ct.every((r) => r.maCauTruc && r.bang && r.khoa && r.kieu));
 });
+
+test('1b: gieo năm bộ chỉ tiêu', () => {
+  const { DuLieuGieo } = taiThuan();
+  assert.deepEqual(DuLieuGieo.BANG.DM_BoChiTieu.map((b) => b.maBo), ['LUAT-TK', 'TT13-BNV', 'TT45-BKHCN', 'TU-699', 'CDS-HN']);
+  assert.equal(DuLieuGieo.BANG.DM_BoChiTieu.find((b) => b.maBo === 'LUAT-TK').loaiHeThong, 'Quốc gia');
+  assert.equal(DuLieuGieo.BANG.DM_BoChiTieu.find((b) => b.maBo === 'TU-699').loaiHeThong, 'Theo dõi, đánh giá');
+});

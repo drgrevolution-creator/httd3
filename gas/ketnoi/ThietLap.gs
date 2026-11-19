@@ -21,6 +21,13 @@ var ThietLap = (function () {
     var sh = ss.getSheetByName(tenBang), moi = false;
     if (!sh) { sh = ss.insertSheet(tenBang); moi = true; }
     var cot = SoDo.BANG[tenBang].cot, td = Bang.dongTieuDe(tenBang);
+    // Sheet đã có dữ liệu mà tiêu đề khác sơ đồ: KHÔNG ghi đè (tránh lệch cột dữ liệu), chỉ cảnh báo.
+    if (!moi && sh.getLastRow() >= 3) {
+      var hienCo = sh.getRange(1, 1, 1, Math.min(sh.getMaxColumns(), cot.length)).getValues()[0].map(String);
+      var khop = td[0].every(function (k, i) { return hienCo[i] === k; });
+      if (!khop) { var cb = 'CẢNH BÁO ' + tenBang + ': tiêu đề hiện có khác sơ đồ, không ghi đè vì sheet đã có dữ liệu'; console.log(cb); return { canhBao: cb }; }
+      return { moi: false };
+    }
     if (sh.getMaxColumns() < cot.length) sh.insertColumnsAfter(sh.getMaxColumns(), cot.length - sh.getMaxColumns());  // sheet mới chỉ có 26 cột
     sh.getRange(1, 1, 2, cot.length).setValues(td);
     sh.getRange(1, 1, 1, cot.length).setFontWeight('bold').setBackground('#e8eaed');
@@ -28,7 +35,7 @@ var ThietLap = (function () {
     sh.setFrozenRows(2);
     // Định dạng chữ cho cột chữ trên 5.000 dòng đầu (dòng ghi sau vẫn được đặt lại định dạng khi ghi).
     cot.forEach(function (c, i) { if (KIEU_CHU[c.kieu]) sh.getRange(3, i + 1, 5000, 1).setNumberFormat('@'); });
-    return moi;
+    return { moi: moi };
   }
 
   // Tạo hoặc lấy file Sheets theo tên; lưu ID vào Script Properties.
@@ -41,7 +48,11 @@ var ThietLap = (function () {
       _props().setProperty('ID_' + tenFile, ss.getId());
     }
     var cacBang = SoDo.danhSachBang().filter(function (t) { return SoDo.BANG[t].file === tenFile; });
-    cacBang.forEach(function (t) { _taoSheet(ss, t); });
+    var canhBao = [];
+    cacBang.forEach(function (t) { var kq = _taoSheet(ss, t); if (kq && kq.canhBao) canhBao.push(kq.canhBao); });
+    // Bảng cũ đã bỏ khỏi sơ đồ: xóa nếu còn trống (chỉ có 2 dòng tiêu đề)
+    ['ChiTieu_NguonQuyDinh'].forEach(function (ten) { var s = ss.getSheetByName(ten); if (s && s.getLastRow() <= 2 && ss.getSheets().length > 1) ss.deleteSheet(s); });
+    ss.__canhBao = canhBao;
     // Xóa sheet mặc định "Sheet1"/"Trang tính1" nếu còn và không phải bảng
     ss.getSheets().forEach(function (s) { if (/^(Sheet1|Trang tính1)$/.test(s.getName()) && s.getLastRow() === 0 && ss.getSheets().length > 1) ss.deleteSheet(s); });
     return ss;
@@ -79,7 +90,7 @@ var ThietLap = (function () {
     baoCao.push('Thư mục Drive: HTTD3/' + goc.getId());
 
     // 2. Ba file Sheets và mọi bảng
-    SoDo.FILE.forEach(function (ten) { _taoFile(ten, goc); baoCao.push('File ' + ten + ': ' + _props().getProperty('ID_' + ten)); });
+    SoDo.FILE.forEach(function (ten) { var ss = _taoFile(ten, goc); baoCao.push('File ' + ten + ': ' + _props().getProperty('ID_' + ten)); (ss.__canhBao || []).forEach(function (cb) { baoCao.push(cb); }); });
 
     // 3. Gieo danh mục
     Object.keys(DuLieuGieo.BANG).forEach(function (t) { var n = _gieo(t, DuLieuGieo.BANG[t]); if (n) baoCao.push('Gieo ' + t + ': ' + n + ' dòng'); });
