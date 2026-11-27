@@ -67,6 +67,24 @@ Ghép từng cặp trên màn **Chỉ tiêu**:
 
 Việc ghép được ghi vào nhật ký, kèm căn cứ là "Theo danh sách đề xuất ghép đã duyệt". Nhập lại file của bộ **không** xóa các liên kết đã ghép.
 
+## 4b. Duyệt tử số, mẫu số cho TU-699 (bổ sung 27/11/2026)
+
+Mục đích là ghi trước, cho từng chỉ tiêu, cách tính giá trị: loại giá trị, tử số là gì, mẫu số là gì, hệ số nhân. Màn **Nhập số liệu kỳ** ở giai đoạn 3 sẽ dùng các định nghĩa này để hỏi đúng người phụ trách.
+
+1. Mở file `de-xuat-tu-mau-TU-699.xlsx` (Claude gửi trong phiên chat). Mỗi dòng là một chỉ tiêu, gồm loại giá trị, tử số, mẫu số, hệ số do Claude đề xuất, và ghi chú. Ghi chú "Cần xác nhận" là những chỗ nên xem kỹ.
+2. Cần sửa gì thì ghi vào cột **Mr. Nobody sửa**, đúng dạng `loai=…; tuSo=…; mauSo=…; heSo=…`, chỉ ghi phần muốn đổi. Ví dụ:
+   - `mauSo=Số hộ nghèo đầu kỳ`;
+   - `loai=TOC_DO` (khi chỉ tiêu do Thống kê Thành phố tính, xã không có tử/mẫu).
+
+   Mã loại giá trị xem ở sheet `LoaiGiaTri` trong file. Không sửa các cột khác.
+3. Lưu file với tên `tu-mau-TU-699-da-duyet.xlsx` rồi gửi lại Claude.
+4. Claude gửi lại `TU-699.xlsx` đã trộn kết quả. Mr. Nobody nhập file này theo mục 2. Bước xem trước phải ra "Sửa N, Thêm 0, Hết hiệu lực 0", với N là số chỉ tiêu có loại giá trị.
+5. Mở một chỉ tiêu % trên màn **Chỉ tiêu**: mục **Cách tính** hiện loại giá trị, tử số, mẫu số và công thức.
+
+Chỉ tiêu được giao theo kế hoạch mà chưa có quy định phương pháp tính thì để trống tử số và mẫu số. Hệ thống vẫn cho nhập, chỉ cảnh báo, và mục Cách tính ghi "Chưa quy định phương pháp tính".
+
+**Thêm loại giá trị mới:** vào **Danh mục**, chọn **Loại giá trị chỉ tiêu**, bấm **Thêm**. Đánh dấu "Có tử số và mẫu số" nếu loại đó tính bằng tử ÷ mẫu, và ghi hệ số mặc định nếu có.
+
 ## 5. Sự cố thường gặp
 
 | Hiện tượng | Cách xử lý |

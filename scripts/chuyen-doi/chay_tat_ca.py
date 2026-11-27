@@ -12,6 +12,7 @@ import sys
 THU_MUC = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, THU_MUC)
 import de_xuat_ghep  # noqa: E402
+import de_xuat_tu_mau  # noqa: E402
 import mau_chuan  # noqa: E402
 import tu699  # noqa: E402
 import van_ban_tw  # noqa: E402
@@ -32,7 +33,17 @@ def main():
     if not os.path.exists(nguon_699):
         print('Bỏ qua TU-699: không có ' + nguon_699)
         return 0
-    tu699.main(['', nguon_699, os.path.join(RIENG, 'TU-699.xlsx')])
+    # Tử số/mẫu số: dùng file Mr. Nobody đã duyệt nếu có; luôn sinh lại file đề xuất để duyệt.
+    da_duyet = os.path.join(RIENG, 'tu-mau-TU-699-da-duyet.xlsx')
+    bo699, d699 = tu699.chuyen(nguon_699, tu_mau=da_duyet if os.path.exists(da_duyet) else None)
+    mau_chuan.ghi_mau(os.path.join(RIENG, 'TU-699.xlsx'), bo699, d699)
+    print('Đã ghi TU-699.xlsx: %d chỉ tiêu%s' % (len(d699), ' (đã trộn tử/mẫu đã duyệt)' if os.path.exists(da_duyet) else ''))
+    dinh_nghia = os.path.join(RIENG, 'dinh-nghia-tu-mau-TU-699.json')
+    if os.path.exists(dinh_nghia):
+        _, d_tho = tu699.chuyen(nguon_699)
+        dx = de_xuat_tu_mau.lap_de_xuat(d_tho, de_xuat_tu_mau.doc_dinh_nghia(dinh_nghia))
+        de_xuat_tu_mau.ghi(os.path.join(RIENG, 'de-xuat-tu-mau-TU-699.xlsx'), dx)
+        print('Đã ghi de-xuat-tu-mau-TU-699.xlsx: %d dòng' % len(dx))
     _, d699 = mau_chuan.doc_mau(os.path.join(RIENG, 'TU-699.xlsx'))
     bang = de_xuat_ghep.lap_bang(d699, tw)
     de_xuat_ghep.ghi(os.path.join(RIENG, 'de-xuat-ghep.xlsx'), bang)

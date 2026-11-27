@@ -16,6 +16,7 @@ import sys
 import openpyxl
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import de_xuat_tu_mau  # noqa: E402
 import mau_chuan  # noqa: E402
 
 MA_BO = 'TU-699'
@@ -67,8 +68,13 @@ def _ghi_chu(r):
     return '\n'.join(phan)
 
 
-def chuyen(duong_dan):
-    """Đọc file Excel 699 → (bo, dongs) theo mẫu chuẩn ChiTieu_TrongBo."""
+def chuyen(duong_dan, tu_mau=None):
+    """Đọc file Excel 699 → (bo, dongs) theo mẫu chuẩn ChiTieu_TrongBo.
+
+    tu_mau: file đề xuất tử số/mẫu số đã duyệt (de_xuat_tu_mau.py) — có thì trộn bốn cột loại giá trị,
+    tử số, mẫu số, hệ số nhân theo maTrongBo; không có thì bốn cột để trống.
+    """
+    duyet = de_xuat_tu_mau.doc_da_duyet(tu_mau) if tu_mau else {}
     ws = openpyxl.load_workbook(duong_dan, data_only=True).worksheets[0]
     dongs = []
     nhom_ma = nhom_ten = ''
@@ -123,6 +129,7 @@ def chuyen(duong_dan):
             'coQuanXacNhanSoLieu': _o(r, 14), 'linhVucLon': LINH_VUC[nhom_ma],
             'tinhTrangHieuLuc': 'Còn hiệu lực', 'ghiChu': _ghi_chu(r),
         })
+        dongs[-1].update(duyet.get(khoa, {'loaiGiaTri': '', 'dinhNghiaTuSo': '', 'dinhNghiaMauSo': '', 'heSoNhan': ''}))
     bo = mau_chuan.bo_gieo(MA_BO)
     bo['soChiTieu'] = len(dongs)
     return bo, dongs

@@ -79,6 +79,28 @@ Claude mở từng file sinh ra, xem 5 dòng đầu và so với văn bản gố
 - NĐ 94: 24 chỉ tiêu không có mục "Phân tổ chủ yếu": 0506–0511, 0513, 0514, 0701–0703, 0709–0711, 0716, 0720–0724, 0904, 1005, 1102, 1709.
 - TT 45, chỉ tiêu 0204: mục "2. Phân tổ chủ yếu" có tiêu đề nhưng không có nội dung.
 
+## 4b. Tử số, mẫu số (bổ sung 27/11/2026)
+
+Mẫu chuẩn có thêm 4 cột ở cuối sheet `ChiTieu`:
+
+| Cột | Nội dung |
+|---|---|
+| `loaiGiaTri` | Loại giá trị, lấy mã trong danh mục Loại giá trị: `TY_LE`, `TOC_DO`, `SO_TUYET_DOI`, `XEP_HANG` (danh mục có thể thêm loại) |
+| `dinhNghiaTuSo` | Tử số là gì |
+| `dinhNghiaMauSo` | Mẫu số là gì |
+| `heSoNhan` | Hệ số nhân: 100 cho %, 10.000 cho "trên 10.000 dân", 1 cho bình quân đầu người |
+
+Ghi chú:
+
+- File không có các cột này, hoặc để trống, vẫn nhập được và không sinh dòng "Sửa".
+- Chỉ tiêu loại tỷ lệ mà thiếu tử số hoặc mẫu số vẫn nhập được; bước xem trước chỉ hiện cảnh báo "Chưa quy định phương pháp tính".
+
+Riêng TU-699 (các file nằm trong `data/rieng/`):
+
+- `dinh-nghia-tu-mau-TU-699.json`: định nghĩa Claude soạn tay, có thể đổi loại so với quy tắc mặc định.
+- `de-xuat-tu-mau-TU-699.xlsx`: file đề xuất đủ 174 dòng, để Mr. Nobody duyệt. Trong 77 chỉ tiêu %, có 50 tỷ lệ và 27 tốc độ hoặc chỉ số. Thêm 9 tỷ số khác: 4 chỉ tiêu trên 10.000 dân và 5 chỉ tiêu bình quân đầu người.
+- `tu-mau-TU-699-da-duyet.xlsx`: file Mr. Nobody đã duyệt, gửi lại cho Claude. Khi có file này, `chay_tat_ca.py` sẽ trộn kết quả vào `TU-699.xlsx`.
+
 ## 5. Chạy lại
 
 Cần Python 3 có gói `openpyxl` và Node.js (để đọc sơ đồ). Tại thư mục gốc kho mã, chạy:

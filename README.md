@@ -36,6 +36,7 @@ docs/           Thiết kế, kế hoạch, tài liệu vận hành
 1. `docs/van-hanh/02-trien-khai-apps-script.md` Phần 6 — cập nhật Apps Script lên giai đoạn mới.
 2. `docs/van-hanh/05-nhap-bo-chi-tieu.md` — nhập bốn bộ chỉ tiêu, duyệt và ghép nội hàm.
 3. `docs/van-hanh/06-nghiem-thu-giai-doan-1b.md` — bảng kiểm nghiệm thu.
+4. `docs/van-hanh/07-nghiem-thu-tu-so-mau-so.md` — nghiệm thu bổ sung tử số, mẫu số (27/11/2026).
 
 Mẫu nhập chuẩn và cách sinh lại: `data/bo-chi-tieu/README.md`.
 

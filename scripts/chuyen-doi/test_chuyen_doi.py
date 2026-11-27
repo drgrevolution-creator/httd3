@@ -19,6 +19,7 @@ import mau_chuan  # noqa: E402
 import tu699  # noqa: E402
 import van_ban_tw  # noqa: E402
 import de_xuat_ghep  # noqa: E402
+import de_xuat_tu_mau  # noqa: E402
 
 NAM_TRUONG = ['khaiNiemPhuongPhapTinh', 'phanToChuYeu', 'kyCongBo', 'nguonSoLieu',
               'coQuanChuTriThuThap', 'coQuanPhoiHopThuThap']
@@ -269,6 +270,64 @@ def _():
     tuoi_tho = [r for r in bang if r['ten'] == 'Tuổi thọ trung bình tính từ lúc sinh']
     assert tuoi_tho and tuoi_tho[0]['goiY'] == 'LUAT-TK:0109' and tuoi_tho[0]['diem'] == 1, tuoi_tho[:1]
     assert all(r['diem'] == '' or 0.6 <= r['diem'] <= 1 for r in bang)
+
+
+# ---------- Tử số / mẫu số ----------
+DINH_NGHIA = os.path.join(GOC, 'data', 'rieng', 'dinh-nghia-tu-mau-TU-699.json')
+
+
+@ca('tử/mẫu: quy tắc phân loại mặc định')
+def _():
+    p = de_xuat_tu_mau.phan_loai
+    assert p('Tốc độ tăng trưởng GRDP', '%') == ('TOC_DO', None)
+    assert p('Tỷ lệ hồ sơ giải quyết đúng hạn', '%') == ('TY_LE', 100)
+    assert p('Số bác sĩ/10.000 dân', 'Bác sĩ') == ('TY_LE', 10000)
+    assert p('Thu nhập bình quân đầu người', 'VND/người') == ('TY_LE', 1)
+    assert p('Xếp hạng Chỉ số năng lực cạnh tranh cấp tỉnh', 'Hạng') == ('XEP_HANG', None)
+    assert p('Tổng vốn đầu tư thực hiện trên địa bàn', 'Tỷ đồng') == ('SO_TUYET_DOI', None)
+
+
+@ca('tử/mẫu: đề xuất đủ 174 dòng; 77 dòng % là tỷ lệ hoặc tốc độ; mọi tỷ lệ có định nghĩa; tốc độ tăng không thành tỷ lệ')
+def _():
+    _can_699()
+    if not os.path.exists(DINH_NGHIA):
+        raise _BoQua('thiếu ' + DINH_NGHIA)
+    _, d = tu699.chuyen(NGUON_699)
+    dx = de_xuat_tu_mau.lap_de_xuat(d, de_xuat_tu_mau.doc_dinh_nghia(DINH_NGHIA))
+    assert len(dx) == 174
+    m = {r['maTrongBo']: r for r in dx}
+    phan_tram = [r for r in dx if r['donViTinh'].startswith('%')]
+    assert len(phan_tram) == 77
+    assert all(r['loaiGiaTri'] in ('TY_LE', 'TOC_DO') for r in phan_tram)
+    thieu = [r['maTrongBo'] for r in dx if r['loaiGiaTri'] == 'TY_LE' and not (r['dinhNghiaTuSo'] and r['dinhNghiaMauSo'])]
+    assert not thieu, thieu
+    assert m['TU-699:4']['loaiGiaTri'] == 'TOC_DO'
+    assert m['TU-699:6.4']['loaiGiaTri'] == 'TOC_DO'  # "Tố độ" (lỗi chính tả trong văn bản)
+    assert m['TU-699:56']['loaiGiaTri'] == 'TOC_DO'  # chỉ số giá
+    assert m['TU-699:79']['heSoNhan'] == 10000 and m['TU-699:12']['heSoNhan'] == 1
+    assert m['TU-699:128']['loaiGiaTri'] == 'XEP_HANG'
+    assert all(r['MrNobodySua'] == '' for r in dx)
+
+
+@ca('tử/mẫu: trộn file duyệt vào tu699; không có file duyệt thì bốn cột rỗng')
+def _():
+    _can_699()
+    _, d = tu699.chuyen(NGUON_699)
+    assert all(r['loaiGiaTri'] == '' and r['dinhNghiaTuSo'] == '' and r['heSoNhan'] == '' for r in d)
+    dx = [{'maTrongBo': 'TU-699:124', 'tenNguyenVan': 'x', 'donViTinh': '%', 'capDuLieu': '', 'loaiGiaTri': 'TY_LE',
+           'dinhNghiaTuSo': 'Số hồ sơ đúng hạn', 'dinhNghiaMauSo': 'Tổng số hồ sơ', 'heSoNhan': 100, 'ghiChuClaude': '',
+           'MrNobodySua': 'tuSo=X; heSo=1'},
+          {'maTrongBo': 'TU-699:4', 'tenNguyenVan': 'y', 'donViTinh': '%', 'capDuLieu': '', 'loaiGiaTri': 'TOC_DO',
+           'dinhNghiaTuSo': '', 'dinhNghiaMauSo': '', 'heSoNhan': '', 'ghiChuClaude': '', 'MrNobodySua': ''}]
+    with tempfile.TemporaryDirectory() as t:
+        f = os.path.join(t, 'duyet.xlsx')
+        de_xuat_tu_mau.ghi(f, dx)
+        _, d2 = tu699.chuyen(NGUON_699, tu_mau=f)
+    m = _theo_ma(d2)
+    assert m['TU-699:124']['dinhNghiaTuSo'] == 'X' and m['TU-699:124']['dinhNghiaMauSo'] == 'Tổng số hồ sơ'
+    assert m['TU-699:124']['heSoNhan'] == '1' and m['TU-699:124']['loaiGiaTri'] == 'TY_LE'
+    assert m['TU-699:4']['loaiGiaTri'] == 'TOC_DO' and m['TU-699:4']['heSoNhan'] == ''
+    assert m['TU-699:1']['loaiGiaTri'] == ''
 
 
 if __name__ == '__main__':
