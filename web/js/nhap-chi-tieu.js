@@ -104,7 +104,17 @@ HTTD3.nhapChiTieu = (function () {
           }))
         ]));
       } else vungKetQua.appendChild(el('ul', { 'data-test': 'loi-nhap', hidden: true }));
-      var COT = [['maTrongBo', 'Mã trong bộ'], ['maGoc', 'Mã gốc'], ['sttTrongBo', 'STT'], ['nhomMa', 'Nhóm'], ['tenNguyenVan', 'Tên chỉ tiêu'], ['capDuLieu', 'Cấp dữ liệu'], ['chaTrongBo', 'Thuộc chỉ tiêu']];
+      var canhBao = x.kiemTra.canhBao || [];
+      if (canhBao.length) {
+        vungKetQua.appendChild(el('section', { class: 'the canh-bao-vang' }, [
+          el('h2', { text: canhBao.length + ' cảnh báo — vẫn nhập được, nên bổ sung sau' }),
+          el('ul', { 'data-test': 'canh-bao-nhap' }, canhBao.map(function (l) {
+            var noi = l.dong ? 'Dòng ' + (d.dongExcel[l.dong - 1] || l.dong + DONG_DAU_DU_LIEU - 1) : 'Sheet Bo';
+            return el('li', { text: noi + ' · ' + ((x.tenCot || {})[l.khoa] || l.khoa) + ': ' + l.thongBao });
+          }))
+        ]));
+      }
+      var COT = [['maTrongBo', 'Mã trong bộ'], ['maGoc', 'Mã gốc'], ['sttTrongBo', 'STT'], ['nhomMa', 'Nhóm'], ['tenNguyenVan', 'Tên chỉ tiêu'], ['capDuLieu', 'Cấp dữ liệu'], ['loaiGiaTri', 'Loại giá trị'], ['chaTrongBo', 'Thuộc chỉ tiêu']];
       var dongLoi = {}; loi.forEach(function (l) { if (l.dong) dongLoi[l.dong] = true; });
       vungKetQua.appendChild(el('div', { class: 'cuon-ngang the' }, [el('table', { class: 'bang', 'data-test': 'bang-xem-truoc' }, [
         el('thead', {}, [el('tr', {}, [el('th', { scope: 'col', text: 'Dòng' })].concat(COT.map(function (c) { return el('th', { scope: 'col', text: c[1] }); })))]),

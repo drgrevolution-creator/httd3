@@ -137,6 +137,8 @@ HTTD3.chiTieu = (function () {
       vungND.appendChild(el('section', { class: 'muc-chi-tiet' }, [el('h3', { text: '5. Cơ quan chịu trách nhiệm thu thập, tổng hợp' }),
         el('div', { class: 'dong-tt' }, [el('span', { class: 'nhan-tt', text: 'Chủ trì:' }), doanNoiDung(ch.coQuanChuTriThuThap)]),
         el('div', { class: 'dong-tt' }, [el('span', { class: 'nhan-tt', text: 'Phối hợp:' }), doanNoiDung(ch.coQuanPhoiHopThuThap)])]));
+      var ctc = veCachTinh(ch, kq.dsLoaiGiaTri);
+      if (ctc) vungND.appendChild(ctc);
     }).catch(function (e) { vungND.innerHTML = ''; vungND.appendChild(el('p', { class: 'loi', text: e.message })); });
   }
 
@@ -238,6 +240,23 @@ HTTD3.chiTieu = (function () {
 
   // ----- Chi tiết một chỉ tiêu (tấm trượt) -----
   function doanNoiDung(v) { return el('div', { class: 'noi-dung-chi-tieu', text: rong(v) ? '—' : String(v) }); }
+  // Mục "Cách tính" (tử số/mẫu số) của một chỉ tiêu trong bộ hoặc chỉ tiêu chuẩn; null nếu chưa có loại giá trị.
+  function veCachTinh(rec, dsLoai) {
+    if (!rec || rong(rec.loaiGiaTri)) return null;
+    var loai = (dsLoai || []).find(function (l) { return l.maLoaiGiaTri === rec.loaiGiaTri; }) || { tenLoaiGiaTri: rec.loaiGiaTri };
+    var coTuMau = loai.coTuSoMauSo === true || String(loai.coTuSoMauSo).toUpperCase() === 'TRUE';
+    var sec = el('section', { class: 'muc-chi-tiet', 'data-test': 'cach-tinh' }, [el('h3', { text: 'Cách tính' }),
+      el('div', { class: 'dong-tt' }, [el('span', { class: 'nhan-tt', text: 'Loại giá trị:' }), el('span', { text: loai.tenLoaiGiaTri || rec.loaiGiaTri })])]);
+    var heSo = !rong(rec.heSoNhan) ? Number(rec.heSoNhan) : (!rong(loai.heSoNhanMacDinh) ? Number(loai.heSoNhanMacDinh) : null);
+    if (coTuMau) {
+      if (rong(rec.dinhNghiaTuSo) || rong(rec.dinhNghiaMauSo)) sec.appendChild(el('p', { class: 'goi-y', text: 'Chưa quy định phương pháp tính' }));
+      sec.appendChild(el('div', { class: 'dong-tt' }, [el('span', { class: 'nhan-tt', text: 'Tử số:' }), doanNoiDung(rec.dinhNghiaTuSo)]));
+      sec.appendChild(el('div', { class: 'dong-tt' }, [el('span', { class: 'nhan-tt', text: 'Mẫu số:' }), doanNoiDung(rec.dinhNghiaMauSo)]));
+      if (heSo) sec.appendChild(el('p', { class: 'cong-thuc', text: 'Giá trị = Tử số ÷ Mẫu số × ' + heSo.toLocaleString('vi-VN') + (heSo === 100 ? ' (%)' : '') }));
+    } else if (heSo) sec.appendChild(el('div', { class: 'dong-tt' }, [el('span', { class: 'nhan-tt', text: 'Hệ số nhân:' }), el('span', { text: heSo.toLocaleString('vi-VN') })]));
+    return sec;
+  }
+
   function dongTT(nhan, v) { return rong(v) ? null : el('div', { class: 'dong-tt' }, [el('span', { class: 'nhan-tt', text: nhan }), el('span', { class: 'noi-dung-chi-tieu', text: String(v) })]); }
 
   function moChiTiet(maTrongBo, b, trangThai) {
@@ -273,6 +292,8 @@ HTTD3.chiTieu = (function () {
         el('div', { class: 'dong-tt' }, [el('span', { class: 'nhan-tt', text: 'Phối hợp:' }), el('div', { class: 'noi-dung-chi-tieu', 'data-test': 'muc-5-phoi-hop', text: rong(r.coQuanPhoiHopThuThap) ? '—' : r.coQuanPhoiHopThuThap })])
       ]));
     }
+    var cachTinh = veCachTinh(r, kq.dsLoaiGiaTri);
+    if (cachTinh) khung.appendChild(cachTinh);
     var canCu = [dongTT('Căn cứ', r.canCuNguyenVan), dongTT('Vị trí trong văn bản', r.viTriTrongVanBan), dongTT('Cơ quan xác nhận số liệu', r.coQuanXacNhanSoLieu), dongTT('Ghi chú', r.ghiChu)].filter(Boolean);
     if (canCu.length) khung.appendChild(el('section', { class: 'muc-chi-tiet' }, [el('h3', { text: 'Căn cứ, ghi chú' })].concat(canCu)));
 

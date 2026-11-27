@@ -115,6 +115,29 @@ test('chỉ tiêu chuẩn: danh sách một nội hàm một mã kèm số bộ;
   } finally { await dong(); }
 });
 
+test('cách tính: tỷ lệ có định nghĩa hiện công thức; thiếu định nghĩa hiện chưa quy định', async () => {
+  const { page, url, dong, mc } = await moi({ width: 1280, height: 800 });
+  try {
+    mc.goiThang('chiTieu.nhap', { ...docMau(path.join(GOC, 'web/test/mau/LUAT-TK-10-ty-le.xlsx')), cheDo: 'ghi', canCu: 'nạp' });
+    await dangNhapMatKhau(page, url); await page.waitForSelector('[data-test="man-hom-nay"]');
+    await page.click('[data-test="menu-chi-tieu"]'); await page.waitForSelector('[data-test="man-chi-tieu"]');
+    await chonBo(page, 'LUAT-TK');
+    await page.click('[data-test="cay-chi-tieu"] tr[data-ma="LUAT-TK:0101"]');
+    await page.waitForSelector('[data-test="tam-truot"] [data-test="cach-tinh"]');
+    const ct = await page.textContent('[data-test="cach-tinh"]');
+    assert.match(ct, /Tỷ lệ \(tử số\/mẫu số\)/); assert.match(ct, /Diện tích đất theo mục đích/); assert.match(ct, /Tổng diện tích/);
+    assert.match(ct, /Giá trị = Tử số ÷ Mẫu số × 100 \(%\)/);
+    await page.click('[data-test="tam-truot"] button[aria-label="Đóng"]');
+    await page.click('[data-test="cay-chi-tieu"] tr[data-ma="LUAT-TK:0102"]');
+    await page.waitForSelector('[data-test="tam-truot"] [data-test="cach-tinh"]');
+    assert.match(await page.textContent('[data-test="cach-tinh"]'), /Chưa quy định phương pháp tính/);
+    await page.click('[data-test="tam-truot"] button[aria-label="Đóng"]');
+    await page.click('[data-test="cay-chi-tieu"] tr[data-ma="LUAT-TK:0103"]');
+    await page.waitForSelector('[data-test="tam-truot"] [data-test="muc-5"]');
+    assert.equal(await page.locator('[data-test="cach-tinh"]').count(), 0);
+  } finally { await dong(); }
+});
+
 test('điện thoại 360 px: không cuộn ngang trang, tìm chỉ tiêu theo tên', async () => {
   const { page, dong } = await moVaNap({ width: 360, height: 740 });
   try {

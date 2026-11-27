@@ -72,3 +72,20 @@ test('DONVI không thấy tuyến Nhập bộ chỉ tiêu', async () => {
     assert.equal(await page.locator('[data-test="menu-chi-tieu/nhap"]').count(), 0);
   } finally { await dong(); }
 });
+
+test('file có chỉ tiêu tỷ lệ thiếu định nghĩa: cảnh báo đúng dòng Excel, vẫn ghi được', async () => {
+  const { page, url, dong, mc } = await moi({ width: 1280, height: 800 });
+  try {
+    await dangNhapMatKhau(page, url); await page.waitForSelector('[data-test="man-hom-nay"]');
+    await page.goto(url + '/#/chi-tieu/nhap'); await page.waitForSelector('[data-test="man-nhap-chi-tieu"]');
+    await page.setInputFiles('[data-test="chon-file"]', path.join(MAU, 'LUAT-TK-10-ty-le.xlsx'));
+    await page.waitForSelector('[data-test="canh-bao-nhap"] li');
+    const cb = await page.textContent('[data-test="canh-bao-nhap"]');
+    assert.match(cb, /Dòng 4\b/, cb); assert.match(cb, /Chưa quy định phương pháp tính/);
+    assert.equal(await page.locator('[data-test="loi-nhap"] li').count(), 0);
+    assert.equal(await page.isDisabled('[data-test="nut-ghi"]'), false);
+    await page.click('[data-test="nut-ghi"]');
+    await page.waitForFunction(() => /Đã nhập 10/.test(document.querySelector('[data-test="thong-bao"]')?.textContent || ''));
+    assert.equal(mc.kho.ChiTieu_TrongBo.find((r) => r.maTrongBo === 'LUAT-TK:0101').heSoNhan, 100);
+  } finally { await dong(); }
+});
