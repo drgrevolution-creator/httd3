@@ -44,7 +44,9 @@ var BoChiTieu = (function () {
       } else if (k === 'maGoc' || k === 'sttTrongBo') r[k] = (v === undefined || v === null) ? '' : String(v).trim();
       else if (c && c.kieu === 'number' && typeof v === 'string') {
         // Số từ file Excel (đọc dạng chữ): "10.000" → 10000; rỗng → ''; không đọc được → giữ chữ để kiemTraLo báo lỗi.
-        var n = v.trim() === '' ? '' : _soVN(v);
+        // "10,000" (ô số định dạng #,##0 đọc ra chữ) là mười nghìn; "1,5" vẫn là một phẩy năm.
+        var t = v.trim();
+        var n = t === '' ? '' : (/^\d{1,3}(,\d{3})+$/.test(t) ? Number(t.replace(/,/g, '')) : _soVN(t));
         r[k] = n === null ? v : n;
       }
       else if (c && c.kieu !== 'number' && c.kieu !== 'json' && c.kieu !== 'boolean' && typeof v !== 'object') r[k] = (v === undefined || v === null) ? '' : String(v).trim();

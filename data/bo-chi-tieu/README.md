@@ -92,7 +92,7 @@ Mẫu chuẩn có thêm 4 cột ở cuối sheet `ChiTieu`:
 
 Ghi chú:
 
-- File không có các cột này, hoặc để trống, vẫn nhập được và không sinh dòng "Sửa".
+- File không có các cột này vẫn nhập được. Với bộ **chưa** có giá trị ở bốn cột, nhập lại không sinh dòng "Sửa". Với bộ **đã** có loại giá trị, tử số, mẫu số, nhập một file để trống các cột này sẽ **xóa** chúng; bước xem trước sẽ báo "Sửa N", và khi đó không nên bấm Ghi.
 - Chỉ tiêu loại tỷ lệ mà thiếu tử số hoặc mẫu số vẫn nhập được; bước xem trước chỉ hiện cảnh báo "Chưa quy định phương pháp tính".
 
 Riêng TU-699 (các file nằm trong `data/rieng/`):

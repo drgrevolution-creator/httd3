@@ -384,3 +384,16 @@ test('tử/mẫu: nhập có cảnh báo vẫn ghi; hệ số thành số; ghép
   const lai = nhap(ctx, phien, 'TT13-BNV', loMau('TT13-BNV', 2), 'ghi', 'x');
   assert.equal(lai.duLieu.soSua, 0, 'file chưa có bốn cột mới nhập lại phải giữ nguyên');
 });
+
+test('soát tử/mẫu 1: hệ số gõ dạng chữ trên máy chủ thật — "10.000"→10000, "1,5"→1,5, "10,000"→10000, "mười" lỗi', () => {
+  const { ctx, phien } = quanTri();
+  const lo = loMau('TU-699', 3, (i) => ({ loaiGiaTri: 'TY_LE', dinhNghiaTuSo: 'A', dinhNghiaMauSo: 'B', heSoNhan: ['10.000', '1,5', '10,000'][i] }));
+  const g = nhap(ctx, phien, 'TU-699', lo, 'ghi', 'thử');
+  assert.equal(g.ok, true, JSON.stringify(g));
+  ctx.KhoDuLieu._xoaCache('ChiTieu_TrongBo');
+  assert.equal(ctx.KhoDuLieu.timDong('ChiTieu_TrongBo', 'TU-699:0001').heSoNhan, 10000);
+  assert.equal(ctx.KhoDuLieu.timDong('ChiTieu_TrongBo', 'TU-699:0002').heSoNhan, 1.5);
+  assert.equal(ctx.KhoDuLieu.timDong('ChiTieu_TrongBo', 'TU-699:0003').heSoNhan, 10000);
+  const sai = nhap(ctx, phien, 'TU-699', loMau('TU-699', 1, () => ({ heSoNhan: 'mười' })), 'xemTruoc');
+  assert.ok(sai.duLieu.kiemTra.loi.some((l) => l.khoa === 'heSoNhan'), JSON.stringify(sai.duLieu.kiemTra));
+});

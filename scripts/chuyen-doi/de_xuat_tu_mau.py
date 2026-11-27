@@ -96,30 +96,91 @@ def ghi(duong_dan, bang):
     wb.save(duong_dan)
 
 
+# Khóa trong cột MrNobodySua, so sau khi bỏ dấu và khoảng trắng: "Tử số", "tuSo", "tu so" đều là tử số.
 _KHOA_SUA = {'loai': 'loaiGiaTri', 'loaigiatri': 'loaiGiaTri', 'tuso': 'dinhNghiaTuSo', 'mauso': 'dinhNghiaMauSo',
              'heso': 'heSoNhan', 'hesonhan': 'heSoNhan'}
+_LENH_BO = {'bo', 'xoa', 'khong', 'boqua'}
+_BON_COT = ('loaiGiaTri', 'dinhNghiaTuSo', 'dinhNghiaMauSo', 'heSoNhan')
 
 
-def doc_da_duyet(duong_dan):
-    """File đề xuất đã duyệt → {maTrongBo: {loaiGiaTri, dinhNghiaTuSo, dinhNghiaMauSo, heSoNhan}} (chữ), đã áp cột MrNobodySua."""
+def _khoa_sua(k):
+    return _KHOA_SUA.get(re.sub(r'\s', '', _khong_dau(k)))
+
+
+def _he_so_chu(v):
+    """Hệ số kiểu Việt Nam → chữ số thường ("10.000" → "10000", "1,5" → "1.5", "10,000" → "10000"); không đọc được → giữ nguyên."""
+    t = re.sub(r'\s', '', str(v))
+    if re.fullmatch(r'\d+\.0', t):
+        return t[:-2]
+    if re.fullmatch(r'\d{1,3}([.,]\d{3})+', t):
+        return t.replace('.', '').replace(',', '')
+    if re.fullmatch(r'\d+,\d+', t):
+        return t.replace(',', '.')
+    return t
+
+
+def _tach_lenh(chuoi):
+    """Tách "k=v; k=v": chỉ tách tại dấu ; đứng trước một khóa đã biết (giữ ; trong nội dung). → (lệnh [(cột, giá trị)], bỏ?, phần không hiểu)."""
+    lenh, khong_hieu, bo = [], [], False
+    for phan in chuoi.split(';'):
+        p = phan.strip()
+        if not p:
+            continue
+        if '=' in p and _khoa_sua(p.split('=', 1)[0]):
+            k, v = p.split('=', 1)
+            lenh.append([_khoa_sua(k), v.strip()])
+        elif re.sub(r'\s', '', _khong_dau(p)) in _LENH_BO:
+            bo = True
+        elif lenh:
+            lenh[-1][1] = lenh[-1][1] + '; ' + p   # dấu ; nằm trong nội dung của lệnh trước
+        else:
+            khong_hieu.append(p)
+    return lenh, bo, khong_hieu
+
+
+def doc_da_duyet(duong_dan, bao_cao=None):
+    """File đề xuất đã duyệt → {maTrongBo: {loaiGiaTri, dinhNghiaTuSo, dinhNghiaMauSo, heSoNhan}} (chữ), đã áp cột MrNobodySua.
+
+    MrNobodySua: "loai=…; tuSo=…; mauSo=…; heSo=…" (khóa có dấu hay không đều được), hoặc "bỏ" để không nạp bốn cột.
+    Đổi sang loại không có tử/mẫu mà không ghi tử/mẫu/hệ số → các ô đó được xóa. bao_cao (list) nhận từng dòng
+    "mã: đã áp …" và "mã: KHÔNG HIỂU …" để Claude báo lại Mr. Nobody.
+    """
     ws = openpyxl.load_workbook(duong_dan, data_only=True)['DeXuat']
     hang = list(ws.iter_rows(values_only=True))
     khoa = [k for k, _, _ in COT]
     ra = {}
     for r in hang[1:]:
         d = {k: ('' if r[j] is None else str(r[j]).strip()) for j, k in enumerate(khoa) if j < len(r)}
-        if not d.get('maTrongBo'):
+        ma = d.get('maTrongBo')
+        if not ma:
             continue
-        if re.fullmatch(r'\d+\.0', d.get('heSoNhan', '')):
-            d['heSoNhan'] = d['heSoNhan'][:-2]
-        for phan in re.split(r';\s*', d.get('MrNobodySua', '')):
-            if '=' not in phan:
-                continue
-            k, v = phan.split('=', 1)
-            cot = _KHOA_SUA.get(re.sub(r'\s', '', k).lower())
-            if cot:
-                d[cot] = v.strip()
-        ra[d['maTrongBo']] = {k: d.get(k, '') for k in ('loaiGiaTri', 'dinhNghiaTuSo', 'dinhNghiaMauSo', 'heSoNhan')}
+        d['heSoNhan'] = _he_so_chu(d.get('heSoNhan', ''))
+        lenh, bo, khong_hieu = _tach_lenh(d.get('MrNobodySua', ''))
+        if bo:
+            for k in _BON_COT:
+                d[k] = ''
+        da_dat = set()
+        for cot, v in lenh:
+            if cot == 'loaiGiaTri':
+                v = re.sub(r'\s', '', v).upper()
+            elif cot == 'heSoNhan':
+                v = _he_so_chu(v)
+            d[cot] = v
+            da_dat.add(cot)
+        if 'loaiGiaTri' in da_dat and d['loaiGiaTri'] in TEN_LOAI and d['loaiGiaTri'] != 'TY_LE':
+            for k in ('dinhNghiaTuSo', 'dinhNghiaMauSo', 'heSoNhan'):
+                if k not in da_dat:
+                    d[k] = ''
+        if bao_cao is not None:
+            if bo:
+                bao_cao.append('%s: đã áp "bỏ" (không nạp loại giá trị, tử số, mẫu số, hệ số)' % ma)
+            if lenh:
+                bao_cao.append('%s: đã áp %s' % (ma, '; '.join('%s=%s' % (c, v) for c, v in lenh)))
+            if 'loaiGiaTri' in da_dat and d['loaiGiaTri'] not in TEN_LOAI:
+                bao_cao.append('%s: loại "%s" không phải 4 loại gieo sẵn — phải có trong danh mục Loại giá trị' % (ma, d['loaiGiaTri']))
+            for p in khong_hieu:
+                bao_cao.append('%s: KHÔNG HIỂU "%s" (bỏ qua)' % (ma, p))
+        ra[ma] = {k: d.get(k, '') for k in _BON_COT}
     return ra
 
 

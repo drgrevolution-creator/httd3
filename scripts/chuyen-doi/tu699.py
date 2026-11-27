@@ -130,6 +130,9 @@ def chuyen(duong_dan, tu_mau=None):
             'tinhTrangHieuLuc': 'Còn hiệu lực', 'ghiChu': _ghi_chu(r),
         })
         dongs[-1].update(duyet.get(khoa, {'loaiGiaTri': '', 'dinhNghiaTuSo': '', 'dinhNghiaMauSo': '', 'heSoNhan': ''}))
+    la = sorted(set(duyet) - {d['maTrongBo'] for d in dongs})
+    if la:
+        raise ValueError('File duyệt tử số/mẫu số có mã không tồn tại trong Phụ lục 699: ' + ', '.join(la))
     bo = mau_chuan.bo_gieo(MA_BO)
     bo['soChiTieu'] = len(dongs)
     return bo, dongs

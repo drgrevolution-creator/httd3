@@ -67,11 +67,14 @@ var ChiTieuGas = (function () {
   }
 
   // Chỉ giữ cột người dùng nhập của bảng; cột số đổi sang số.
-  function _locCot(tenBang, o) {
+  // giuChuSo = true: cột số dạng chữ giữ nguyên để BoChiTieu.chuanHoaDong đọc theo quy tắc số Việt Nam
+  // (Number("10.000") = 10 là sai — soát 27/11/2026).
+  function _locCot(tenBang, o, giuChuSo) {
     var r = {};
     SoDo.BANG[tenBang].cot.forEach(function (c) {
       if (c.heThong || o[c.khoa] === undefined || o[c.khoa] === null) return;
-      if (c.kieu === 'number') { if (!_rong(o[c.khoa])) r[c.khoa] = Number(o[c.khoa]); }
+      if (c.kieu === 'number' && giuChuSo && typeof o[c.khoa] === 'string') r[c.khoa] = o[c.khoa];
+      else if (c.kieu === 'number') { if (!_rong(o[c.khoa])) r[c.khoa] = Number(o[c.khoa]); }
       else r[c.khoa] = o[c.khoa];
     });
     return r;
@@ -102,7 +105,7 @@ var ChiTieuGas = (function () {
     return KhoDuLieu.khoa(function () {
       var kb = _kiemTraBo(d.bo), maBo = kb.banGhi.maBo || '';
       var dong = d.dong.map(function (r0) {
-        var r = BoChiTieu.chuanHoaDong(_locCot(BANG, r0 || {}));
+        var r = BoChiTieu.chuanHoaDong(_locCot(BANG, r0 || {}, true));
         if (_rong(r.maBo)) r.maBo = maBo;
         return r;
       });

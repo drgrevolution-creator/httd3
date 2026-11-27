@@ -330,6 +330,58 @@ def _():
     assert m['TU-699:1']['loaiGiaTri'] == ''
 
 
+@ca('soát tử/mẫu 2: đọc cột MrNobodySua — có dấu, "bỏ", dấu ; trong nội dung, đổi loại, hệ số kiểu Việt Nam, báo cáo')
+def _():
+    goc = {'tenNguyenVan': 'x', 'donViTinh': '%', 'capDuLieu': '', 'ghiChuClaude': ''}
+    def dong(ma, sua, **kw):
+        r = dict(goc, maTrongBo=ma, loaiGiaTri='TY_LE', dinhNghiaTuSo='Tử cũ', dinhNghiaMauSo='Mẫu cũ', heSoNhan=100, MrNobodySua=sua)
+        r.update(kw)
+        return r
+    bang = [dong('TU-699:1', 'Tử số = X'), dong('TU-699:2', 'bỏ'), dong('TU-699:3', 'tuSo=Số hộ nghèo; cận nghèo'),
+            dong('TU-699:4', 'loai = toc_do'), dong('TU-699:5', 'heSo=10.000'), dong('TU-699:6', 'heso=1,5'),
+            dong('TU-699:7', 'abc; mauSo=Y'), dong('TU-699:8', '')]
+    bc = []
+    with tempfile.TemporaryDirectory() as t:
+        f = os.path.join(t, 'duyet.xlsx')
+        de_xuat_tu_mau.ghi(f, bang)
+        m = de_xuat_tu_mau.doc_da_duyet(f, bao_cao=bc)
+    assert m['TU-699:1']['dinhNghiaTuSo'] == 'X' and m['TU-699:1']['dinhNghiaMauSo'] == 'Mẫu cũ'
+    assert m['TU-699:2'] == {'loaiGiaTri': '', 'dinhNghiaTuSo': '', 'dinhNghiaMauSo': '', 'heSoNhan': ''}
+    assert m['TU-699:3']['dinhNghiaTuSo'] == 'Số hộ nghèo; cận nghèo', m['TU-699:3']
+    assert m['TU-699:4'] == {'loaiGiaTri': 'TOC_DO', 'dinhNghiaTuSo': '', 'dinhNghiaMauSo': '', 'heSoNhan': ''}, m['TU-699:4']
+    assert m['TU-699:5']['heSoNhan'] == '10000' and m['TU-699:6']['heSoNhan'] == '1.5'
+    assert m['TU-699:7']['dinhNghiaMauSo'] == 'Y'
+    assert m['TU-699:8']['heSoNhan'] == '100' and m['TU-699:8']['dinhNghiaTuSo'] == 'Tử cũ'
+    chu = '\n'.join(bc)
+    assert 'TU-699:7' in chu and 'abc' in chu, chu   # phần không hiểu được báo lại
+    assert 'TU-699:1' in chu                          # phần đã áp dụng cũng được báo
+
+
+@ca('soát tử/mẫu 2: file duyệt có mã không tồn tại thì báo lỗi, không bỏ qua')
+def _():
+    _can_699()
+    bang = [{'maTrongBo': 'TU-699:999', 'tenNguyenVan': 'x', 'donViTinh': '%', 'capDuLieu': '', 'loaiGiaTri': 'TY_LE',
+             'dinhNghiaTuSo': 'a', 'dinhNghiaMauSo': 'b', 'heSoNhan': 100, 'ghiChuClaude': '', 'MrNobodySua': ''}]
+    with tempfile.TemporaryDirectory() as t:
+        f = os.path.join(t, 'duyet.xlsx')
+        de_xuat_tu_mau.ghi(f, bang)
+        try:
+            tu699.chuyen(NGUON_699, tu_mau=f)
+        except ValueError as e:
+            assert 'TU-699:999' in str(e)
+            return
+    raise AssertionError('phải báo mã không tồn tại')
+
+
+@ca('soát tử/mẫu 3: ghi TU-699 khi CHƯA có file duyệt thì thông báo rõ')
+def _():
+    _can_699()
+    import chay_tat_ca
+    with tempfile.TemporaryDirectory() as t:
+        tb = chay_tat_ca.ghi_tu699(NGUON_699, os.path.join(t, 'TU-699.xlsx'), os.path.join(t, 'khong-co.xlsx'))
+    assert 'CHƯA' in tb and 'tử số' in tb, tb
+
+
 if __name__ == '__main__':
     for f in DS_CA:
         f()

@@ -76,10 +76,14 @@ Mục đích là ghi trước, cho từng chỉ tiêu, cách tính giá trị: l
    - `mauSo=Số hộ nghèo đầu kỳ`;
    - `loai=TOC_DO` (khi chỉ tiêu do Thống kê Thành phố tính, xã không có tử/mẫu).
 
-   Mã loại giá trị xem ở sheet `LoaiGiaTri` trong file. Không sửa các cột khác.
+   - ghi `bỏ` nếu không muốn nạp loại giá trị, tử số, mẫu số cho chỉ tiêu đó.
+
+   Khóa viết có dấu hay không dấu đều được (`tử số=…` hoặc `tuSo=…`). Nội dung được phép chứa dấu `;`. Hệ số ghi `10.000` hay `10000` đều được hiểu là mười nghìn. Mã loại giá trị xem ở sheet `LoaiGiaTri` trong file. Không sửa các cột khác. Khi trộn, Claude sẽ báo lại những ô đã áp dụng và những ô không hiểu.
 3. Lưu file với tên `tu-mau-TU-699-da-duyet.xlsx` rồi gửi lại Claude.
 4. Claude gửi lại `TU-699.xlsx` đã trộn kết quả. Mr. Nobody nhập file này theo mục 2. Bước xem trước phải ra "Sửa N, Thêm 0, Hết hiệu lực 0", với N là số chỉ tiêu có loại giá trị.
 5. Mở một chỉ tiêu % trên màn **Chỉ tiêu**: mục **Cách tính** hiện loại giá trị, tử số, mẫu số và công thức.
+
+**Lưu ý:** sau khi đã nạp tử số/mẫu số, **đừng nhập lại bản `TU-699.xlsx` cũ** (bản chưa có bốn cột này), vì sẽ xóa các định nghĩa đã nạp. Nếu bước xem trước bất ngờ báo "Sửa" hàng loạt, hãy dừng và hỏi Claude.
 
 Chỉ tiêu được giao theo kế hoạch mà chưa có quy định phương pháp tính thì để trống tử số và mẫu số. Hệ thống vẫn cho nhập, chỉ cảnh báo, và mục Cách tính ghi "Chưa quy định phương pháp tính".
 
