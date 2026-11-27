@@ -1,6 +1,6 @@
 # HTTD 3.0 — Bổ sung Tử số, Mẫu số cho chỉ tiêu tỷ lệ (thiết kế ngắn)
 
-Phiên bản 0.1 · 24/11/2026 · Mr. Nobody chốt cách A, cách xây 1 và bốn loại giá trị (24/11/2026)
+Phiên bản 0.2 · 27/11/2026 · Mr. Nobody chốt cách A, cách xây 1, bốn loại giá trị (24/11/2026); duyệt thiết kế, sửa quy tắc thiếu định nghĩa thành cảnh báo (27/11/2026)
 
 ## 1. Ý định
 
@@ -66,7 +66,7 @@ Cột mới đặt sau các cột của giai đoạn 1b, trước các cột h�
 **5.3. Kiểm tra khi nhập:**
 
 - Có loại giá trị thì loại đó phải có trong danh mục.
-- Loại có tử/mẫu thì phải ghi đủ định nghĩa tử số và mẫu số; thiếu là lỗi dòng.
+- Loại có tử/mẫu mà thiếu định nghĩa tử số hoặc mẫu số: **vẫn cho nhập** (Mr. Nobody chốt 27/11/2026). Lý do: có chỉ tiêu được giao theo kế hoạch nhưng chưa có quy định phương pháp tính cụ thể. Bước xem trước hiện **cảnh báo** (không chặn), ghi đúng số dòng Excel. Mục Cách tính ghi "Chưa quy định phương pháp tính".
 - Hệ số nhân phải là số dương. Để trống thì dùng hệ số mặc định của loại.
 
 **5.4. Ghép nội hàm:** khi tạo chỉ tiêu chuẩn mới, sao 4 cột này cùng năm mục nội dung. Ghép vào chỉ tiêu chuẩn đã có thì không ghi đè.
@@ -92,13 +92,12 @@ Chỉ tiêu chuẩn sửa được ở màn Danh mục (màn này tự sinh ô n
 **5.7. Giai đoạn 3 sẽ dùng các định nghĩa này:**
 
 - Loại có tử/mẫu: biểu mẫu hiện hai ô, nhãn lấy theo định nghĩa tử số và mẫu số. Giá trị = tử ÷ mẫu × hệ số. Tổng hợp toàn xã = tổng tử ÷ tổng mẫu × hệ số.
-- `ChiTieu_PhanCong.cauHoiTuSo` và `cauHoiMauSo` mặc định lấy từ định nghĩa.
+- `ChiTieu_PhanCong.cauHoiTuSo` và `cauHoiMauSo` mặc định lấy từ định nghĩa. Chỉ tiêu chưa có định nghĩa thì nhãn chỉ là "Tử số", "Mẫu số" và ghi chú "chưa quy định phương pháp tính".
 
-## 6. Quyết định Claude tự đưa ra (Mr. Nobody có thể bác)
+## 6. Quyết định Claude tự đưa ra (Mr. Nobody đã đồng ý 27/11/2026)
 
 - Loại giá trị đặt thành danh mục riêng, để thêm loại không phải sửa mã.
 - Thêm cột hệ số nhân (100, 10.000, 1).
-- Thiếu định nghĩa tử số/mẫu số với loại có tử/mẫu là lỗi chặn nhập, để giai đoạn 3 luôn có câu hỏi rõ.
 - Gán loại giá trị cho cả 174 chỉ tiêu TU-699, không chỉ 77 chỉ tiêu %.
 - Không đụng các bộ Trung ương ở đợt này.
 
@@ -111,5 +110,5 @@ Tên hiển thị các cột; cách script chuyển đổi trộn file đã duy�
 1. Màn Danh mục có "Loại giá trị" với 4 dòng; thêm được dòng thứ 5.
 2. Sau khi nhập lại TU-699: mở một chỉ tiêu % thấy mục Cách tính đúng như file đã duyệt.
 3. Ghép tạo chỉ tiêu chuẩn mới từ dòng đó thì chỉ tiêu chuẩn có đủ 4 thông tin.
-4. Một dòng loại "Tỷ lệ" mà thiếu tử số thì bị báo lỗi đúng số dòng Excel.
+4. Một dòng loại "Tỷ lệ" mà thiếu tử số: vẫn nhập được; bước xem trước hiện cảnh báo đúng số dòng Excel; mục Cách tính ghi "Chưa quy định phương pháp tính".
 5. Nhập lại các bộ TT13, TT45, LUAT-TK (chưa có cột mới) vẫn ra "Giữ nguyên", không sinh Sửa.
