@@ -62,7 +62,8 @@ var ChiTieuGas = (function () {
     var chuan = r.maChiTieu ? KhoDuLieu.timDong('DM_ChiTieu', r.maChiTieu) : null;
     var cung = !r.maChiTieu ? [] : KhoDuLieu.docBang(BANG).filter(function (x) { return x.maChiTieu === r.maChiTieu && x.maTrongBo !== r.maTrongBo; })
       .map(function (x) { return { maTrongBo: x.maTrongBo, maBo: x.maBo, tenNguyenVan: x.tenNguyenVan }; });
-    return { dong: _sach(r), chuan: chuan ? _sach(chuan) : null, cungNoiHam: cung };
+    return { dong: _sach(r), chuan: chuan ? _sach(chuan) : null, cungNoiHam: cung,
+      dsLoaiGiaTri: KhoDuLieu.docBang('DM_LoaiGiaTri').map(_sach) };
   }
 
   // Chỉ giữ cột người dùng nhập của bảng; cột số đổi sang số.
@@ -106,7 +107,9 @@ var ChiTieuGas = (function () {
         return r;
       });
       var daCo = KhoDuLieu.docBang(BANG).filter(function (r) { return r.maBo === maBo; });
-      var kt = BoChiTieu.kiemTraLo(maBo, dong, { daCo: daCo.map(function (r) { return r.maTrongBo; }) });
+      var dsLoai = KhoDuLieu.docBang('DM_LoaiGiaTri').filter(function (l) { return l.tinhTrang !== 'Ngừng'; })
+        .map(function (l) { return { maLoaiGiaTri: l.maLoaiGiaTri, coTuSoMauSo: l.coTuSoMauSo }; });
+      var kt = BoChiTieu.kiemTraLo(maBo, dong, { daCo: daCo.map(function (r) { return r.maTrongBo; }), loaiGiaTri: dsLoai });
       dong.forEach(function (r, i) { if (r.maBo !== maBo) kt.loi.push({ dong: i + 1, khoa: 'maBo', thongBao: 'Dòng ghi bộ ' + r.maBo + ', không phải ' + maBo }); });
       kt.loi = kb.loi.concat(kt.loi); kt.hopLe = kt.loi.length === 0;
       var kh = BoChiTieu.keHoachNhap(daCo, dong);
@@ -155,6 +158,7 @@ var ChiTieuGas = (function () {
           linhVucLon: r.linhVucLon, thuocTinhTongHop: r.thuocTinhTongHop, capDuLieu: r.capDuLieu, kyBaoCaoXa: r.kyBaoCaoXa,
           khaiNiemPhuongPhapTinh: r.khaiNiemPhuongPhapTinh, phanToChuYeu: r.phanToChuYeu, kyCongBo: r.kyCongBo,
           nguonSoLieuNoiDung: r.nguonSoLieu, coQuanChuTriThuThap: r.coQuanChuTriThuThap, coQuanPhoiHopThuThap: r.coQuanPhoiHopThuThap,
+          loaiGiaTri: r.loaiGiaTri, dinhNghiaTuSo: r.dinhNghiaTuSo, dinhNghiaMauSo: r.dinhNghiaMauSo, heSoNhan: r.heSoNhan,
           mucLienQuanCapXa: BoChiTieu.mucLienQuanTuCap(r.capDuLieu)
         };
         var cha = r.chaTrongBo ? KhoDuLieu.timDong(BANG, r.chaTrongBo) : null;

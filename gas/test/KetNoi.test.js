@@ -354,3 +354,33 @@ test('tử/mẫu: thiết lập lại chèn 4 cột vào ChiTieu_TrongBo và DM_
   assert.equal(ctx.KhoDuLieu.docBang('DM_LoaiGiaTri').length, 4);
   const kt = ctx.ThietLap.kiemTraThietLap({ tieuDe: true }).thieu; assert.equal(kt.length, 0, kt.join(', '));
 });
+
+test('tử/mẫu: nhập có cảnh báo vẫn ghi; hệ số thành số; ghép sao bốn cột; chi tiết có danh mục loại; file cũ nhập lại giữ nguyên', () => {
+  const { ctx, phien } = quanTri();
+  const lo = loMau('TU-699', 3, (i) => [
+    { loaiGiaTri: 'TY_LE', dinhNghiaTuSo: 'Số hồ sơ đúng hạn', dinhNghiaMauSo: 'Tổng số hồ sơ', heSoNhan: '100' },
+    { loaiGiaTri: 'TY_LE' },
+    {}
+  ][i]);
+  const xt = nhap(ctx, phien, 'TU-699', lo, 'xemTruoc');
+  assert.equal(xt.ok, true, JSON.stringify(xt).slice(0, 300));
+  assert.equal(xt.duLieu.kiemTra.hopLe, true);
+  assert.ok(xt.duLieu.kiemTra.canhBao.some((c) => c.dong === 2 && /Chưa quy định phương pháp tính/.test(c.thongBao)), JSON.stringify(xt.duLieu.kiemTra.canhBao));
+  const g = nhap(ctx, phien, 'TU-699', lo, 'ghi', 'thử');
+  assert.equal(g.ok, true, JSON.stringify(g));
+  ctx.KhoDuLieu._xoaCache('ChiTieu_TrongBo');
+  const r1 = ctx.KhoDuLieu.timDong('ChiTieu_TrongBo', 'TU-699:0001');
+  assert.equal(r1.heSoNhan, 100); assert.equal(r1.loaiGiaTri, 'TY_LE');
+  const sai = loMau('TU-699', 1, () => ({ loaiGiaTri: 'KHONG_CO' }));
+  assert.equal(nhap(ctx, phien, 'TU-699', sai, 'xemTruoc').duLieu.kiemTra.hopLe, false);
+  const gp = goi(ctx, { phien, action: 'chiTieu.ghep', duLieu: { maTrongBo: 'TU-699:0001', taoMoi: { maChiTieu: 'TL-01', tenChiTieu: 'Tỷ lệ hồ sơ' } } });
+  assert.equal(gp.ok, true, JSON.stringify(gp));
+  ctx.KhoDuLieu._xoaCache('DM_ChiTieu');
+  const ch = ctx.KhoDuLieu.timDong('DM_ChiTieu', 'TL-01');
+  assert.equal(ch.dinhNghiaTuSo, 'Số hồ sơ đúng hạn'); assert.equal(ch.dinhNghiaMauSo, 'Tổng số hồ sơ'); assert.equal(ch.heSoNhan, 100); assert.equal(ch.loaiGiaTri, 'TY_LE');
+  const ct = goi(ctx, { phien, action: 'chiTieu.chiTiet', duLieu: { maTrongBo: 'TU-699:0001' } }).duLieu;
+  assert.equal(ct.dsLoaiGiaTri.length, 4); assert.ok(ct.dsLoaiGiaTri.some((l) => l.maLoaiGiaTri === 'TY_LE' && l.coTuSoMauSo === true));
+  assert.equal(nhap(ctx, phien, 'TT13-BNV', loMau('TT13-BNV', 2), 'ghi', 'x').ok, true);
+  const lai = nhap(ctx, phien, 'TT13-BNV', loMau('TT13-BNV', 2), 'ghi', 'x');
+  assert.equal(lai.duLieu.soSua, 0, 'file chưa có bốn cột mới nhập lại phải giữ nguyên');
+});
