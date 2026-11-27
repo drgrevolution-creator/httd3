@@ -42,6 +42,11 @@ var BoChiTieu = (function () {
         else if (typeof v === 'string') { if (!v.trim()) ds = []; else { try { ds = JSON.parse(v); } catch (e) { ds = v; } } }
         r[k] = Array.isArray(ds) ? ds.map(_mucTieu) : v;
       } else if (k === 'maGoc' || k === 'sttTrongBo') r[k] = (v === undefined || v === null) ? '' : String(v).trim();
+      else if (c && c.kieu === 'number' && typeof v === 'string') {
+        // Số từ file Excel (đọc dạng chữ): "10.000" → 10000; rỗng → ''; không đọc được → giữ chữ để kiemTraLo báo lỗi.
+        var n = v.trim() === '' ? '' : _soVN(v);
+        r[k] = n === null ? v : n;
+      }
       else if (c && c.kieu !== 'number' && c.kieu !== 'json' && c.kieu !== 'boolean' && typeof v !== 'object') r[k] = (v === undefined || v === null) ? '' : String(v).trim();
       else r[k] = v;
     });
@@ -49,8 +54,11 @@ var BoChiTieu = (function () {
   }
 
   // Kiểm tra một lô dòng của bộ maBo. tuyChon.daCo = mã đã có trong hệ thống (cho phép cha nằm ngoài lô).
+  // tuyChon.loaiGiaTri = [{maLoaiGiaTri, coTuSoMauSo}] (DM_LoaiGiaTri): có thì kiểm mã loại và cảnh báo thiếu định nghĩa tử/mẫu
+  // theo CỜ của loại (loại người dùng thêm sau cũng áp dụng). Cảnh báo không chặn nhập (Mr. Nobody chốt 27/11/2026).
   function kiemTraLo(maBo, dongs, tuyChon) {
-    var loi = [], dem = {}, coMa = {};
+    var loi = [], dem = {}, coMa = {}, canhBao = [], loaiTheoMa = null;
+    if (tuyChon && tuyChon.loaiGiaTri) { loaiTheoMa = {}; tuyChon.loaiGiaTri.forEach(function (l) { loaiTheoMa[l.maLoaiGiaTri] = l; }); }
     var daCo = (tuyChon && tuyChon.daCo) || [];
     daCo.forEach(function (m) { coMa[m] = true; });
     dongs.forEach(function (r) { if (r.maTrongBo) coMa[r.maTrongBo] = true; });
@@ -64,12 +72,21 @@ var BoChiTieu = (function () {
       if (!String(r.tenNguyenVan || '').trim()) loi.push({ dong: so, khoa: 'tenNguyenVan', thongBao: 'Thiếu tên chỉ tiêu' });
       if (r.mucTieu !== undefined && r.mucTieu !== '' && !Array.isArray(r.mucTieu)) loi.push({ dong: so, khoa: 'mucTieu', thongBao: 'Mục tiêu phải ghi dạng JSON, ví dụ [{"giaiDoan":"2026","nguyenVan":">=10"}]' });
       if (r.chaTrongBo && !coMa[r.chaTrongBo]) loi.push({ dong: so, khoa: 'chaTrongBo', thongBao: 'Không có chỉ tiêu cha ' + r.chaTrongBo });
+      var rongCot = function (v) { return v === undefined || v === null || String(v).trim() === ''; };
+      if (!rongCot(r.loaiGiaTri) && loaiTheoMa && !loaiTheoMa[r.loaiGiaTri]) loi.push({ dong: so, khoa: 'loaiGiaTri', thongBao: 'Loại giá trị "' + r.loaiGiaTri + '" không có trong danh mục Loại giá trị' });
+      if (!rongCot(r.heSoNhan) && !(typeof r.heSoNhan === 'number' && r.heSoNhan > 0)) loi.push({ dong: so, khoa: 'heSoNhan', thongBao: 'Hệ số nhân phải là số dương, ví dụ 100, 10.000 hoặc 1' });
+      var loai = loaiTheoMa && loaiTheoMa[r.loaiGiaTri];
+      if (loai && (loai.coTuSoMauSo === true || String(loai.coTuSoMauSo).toUpperCase() === 'TRUE')) {
+        [['dinhNghiaTuSo', 'Chưa có định nghĩa tử số'], ['dinhNghiaMauSo', 'Chưa có định nghĩa mẫu số']].forEach(function (x) {
+          if (rongCot(r[x[0]])) canhBao.push({ dong: so, khoa: x[0], thongBao: x[1] + ' — Chưa quy định phương pháp tính' });
+        });
+      }
       cotChon.forEach(function (c) {
         var v = r[c.khoa];
         if (v !== undefined && v !== null && v !== '' && c.tuyChon.indexOf(v) < 0) loi.push({ dong: so, khoa: c.khoa, thongBao: '"' + c.ten + '" không hợp lệ: ' + v });
       });
     });
-    return { hopLe: loi.length === 0, loi: loi };
+    return { hopLe: loi.length === 0, loi: loi, canhBao: canhBao };
   }
 
   // So sánh số thứ tự kiểu "6", "6.1", "10" theo từng phần số.

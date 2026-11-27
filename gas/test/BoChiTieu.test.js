@@ -105,3 +105,35 @@ test('soát 2: đổi tên dòng đã ghép → bỏ ghép (trừ khi file ghi r
   assert.deepEqual(JSON.parse(JSON.stringify(giu.sua[0].thayDoi)), { tenNguyenVan: 'A khác' });
   assert.deepEqual(giu.boGhep, []);
 });
+
+test('tử/mẫu: hệ số, loại lạ, cảnh báo thiếu định nghĩa', () => {
+  const { BoChiTieu } = taiThuan();
+  const d = (o) => Object.assign({ maBo: 'TU-699', tenNguyenVan: 'Tên' }, o);
+  const LGT = [{ maLoaiGiaTri: 'TY_LE', coTuSoMauSo: true }, { maLoaiGiaTri: 'SO_TUYET_DOI', coTuSoMauSo: false }, { maLoaiGiaTri: 'MOI', coTuSoMauSo: true }];
+  assert.equal(BoChiTieu.chuanHoaDong({ heSoNhan: '10.000' }).heSoNhan, 10000);
+  assert.equal(BoChiTieu.chuanHoaDong({ heSoNhan: '100' }).heSoNhan, 100);
+  assert.equal(BoChiTieu.chuanHoaDong({ heSoNhan: '' }).heSoNhan, '');
+  const kt = BoChiTieu.kiemTraLo('TU-699', [
+    d({ maTrongBo: 'TU-699:1', loaiGiaTri: 'TY_LE', dinhNghiaTuSo: 'A', dinhNghiaMauSo: 'B', heSoNhan: '100' }),
+    d({ maTrongBo: 'TU-699:2', loaiGiaTri: 'TY_LE', dinhNghiaTuSo: '' }),
+    d({ maTrongBo: 'TU-699:3', loaiGiaTri: 'KHONG_CO' }),
+    d({ maTrongBo: 'TU-699:4', loaiGiaTri: 'SO_TUYET_DOI', heSoNhan: 'mười' }),
+    d({ maTrongBo: 'TU-699:5', loaiGiaTri: 'MOI' }),
+    d({ maTrongBo: 'TU-699:6', heSoNhan: '-5' })
+  ].map(BoChiTieu.chuanHoaDong), { loaiGiaTri: LGT });
+  assert.deepEqual(kt.loi.map((l) => l.dong + ':' + l.khoa).sort(), ['3:loaiGiaTri', '4:heSoNhan', '6:heSoNhan']);
+  assert.deepEqual(kt.canhBao.map((l) => l.dong + ':' + l.khoa), ['2:dinhNghiaTuSo', '2:dinhNghiaMauSo', '5:dinhNghiaTuSo', '5:dinhNghiaMauSo']);
+  assert.match(kt.canhBao[0].thongBao, /Chưa quy định phương pháp tính/);
+  const khong = BoChiTieu.kiemTraLo('TU-699', [d({ maTrongBo: 'TU-699:9', loaiGiaTri: 'X' })]);
+  assert.equal(khong.hopLe, true, 'không truyền danh mục thì không kiểm mã loại');
+  assert.equal(khong.canhBao.length, 0);
+});
+
+test('tử/mẫu: dòng thiếu bốn cột mới không sinh Sửa so với dòng đã lưu có bốn cột rỗng', () => {
+  const { BoChiTieu } = taiThuan();
+  const daCo = [{ maTrongBo: 'TU-699:1', maBo: 'TU-699', tenNguyenVan: 'Tên', loaiGiaTri: '', dinhNghiaTuSo: '', dinhNghiaMauSo: '', heSoNhan: '' }];
+  const kh = BoChiTieu.keHoachNhap(daCo, [{ maTrongBo: 'TU-699:1', maBo: 'TU-699', tenNguyenVan: 'Tên' }]);
+  assert.equal(kh.giuNguyen, 1, JSON.stringify(kh.sua));
+  const kh2 = BoChiTieu.keHoachNhap([Object.assign({}, daCo[0], { heSoNhan: 100 })], [{ maTrongBo: 'TU-699:1', maBo: 'TU-699', tenNguyenVan: 'Tên', heSoNhan: '100' }]);
+  assert.equal(kh2.giuNguyen, 1, 'hệ số 100 (số) và "100" (chữ từ file) là như nhau');
+});
