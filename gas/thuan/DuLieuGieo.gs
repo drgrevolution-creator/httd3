@@ -87,6 +87,14 @@ var DuLieuGieo = (function () {
 
   // Giai đoạn 1b: năm bộ chỉ tiêu (dữ liệu chỉ tiêu nạp qua màn Nhập từ file mẫu chuẩn).
   function bo(ma, ten, loai, soKyHieu, coQuan, cap, giaiDoan, tu, ghiChu) { return { maBo: ma, tenBo: ten, loaiHeThong: loai, soKyHieuVanBan: soKyHieu, coQuanBanHanh: coQuan, capApDung: cap, giaiDoan: giaiDoan, hieuLucTu: tu, tinhTrangApDung: 'Đang áp dụng', soChiTieu: 0, ghiChu: ghiChu || '' }; }
+  // Loại giá trị chỉ tiêu (thiết kế tử số/mẫu số 27/11/2026)
+  var DM_LoaiGiaTri = [
+    { maLoaiGiaTri: 'TY_LE', tenLoaiGiaTri: 'Tỷ lệ (tử số/mẫu số)', coTuSoMauSo: true, heSoNhanMacDinh: 100, ghiChu: 'Giá trị = Tử số ÷ Mẫu số × hệ số (100 cho %, 10.000 cho "trên 10.000 dân", 1 cho bình quân đầu người)' },
+    { maLoaiGiaTri: 'TOC_DO', tenLoaiGiaTri: 'Tốc độ, chỉ số nhận từ cơ quan khác', coTuSoMauSo: false, ghiChu: 'Ví dụ tốc độ tăng trưởng GRDP do Thống kê Thành phố tính; xã không có tử số, mẫu số' },
+    { maLoaiGiaTri: 'SO_TUYET_DOI', tenLoaiGiaTri: 'Số tuyệt đối', coTuSoMauSo: false, ghiChu: '' },
+    { maLoaiGiaTri: 'XEP_HANG', tenLoaiGiaTri: 'Xếp hạng, điểm số', coTuSoMauSo: false, ghiChu: '' }
+  ];
+
   var DM_BoChiTieu = [
     bo('LUAT-TK', 'Hệ thống chỉ tiêu thống kê quốc gia', 'Quốc gia', 'Phụ lục Luật Thống kê (VBHN 37/VBHN-VPQH)', 'Quốc hội', 'Trung ương', '', '2026-01-01', 'Nội dung chỉ tiêu theo NĐ 94/2022/NĐ-CP'),
     bo('TT13-BNV', 'Hệ thống chỉ tiêu thống kê ngành Nội vụ', 'Bộ, ngành', '13/2025/TT-BNV', 'Bộ Nội vụ', 'Trung ương', '', '2025-07-04'),
@@ -124,7 +132,7 @@ var DuLieuGieo = (function () {
   }
 
   return {
-    BANG: { DM_BoChiTieu: DM_BoChiTieu, DM_DonVi: DM_DonVi, DM_LinhVuc: DM_LinhVuc, DM_TrangThai: DM_TrangThai, DM_MucDo: DM_MucDo, DM_DonViDo: DM_DonViDo, DM_KyBaoCao: DM_KyBaoCao, DM_ChuongTrinh: DM_ChuongTrinh, CauHinh: CauHinh },
+    BANG: { DM_LoaiGiaTri: DM_LoaiGiaTri, DM_BoChiTieu: DM_BoChiTieu, DM_DonVi: DM_DonVi, DM_LinhVuc: DM_LinhVuc, DM_TrangThai: DM_TrangThai, DM_MucDo: DM_MucDo, DM_DonViDo: DM_DonViDo, DM_KyBaoCao: DM_KyBaoCao, DM_ChuongTrinh: DM_ChuongTrinh, CauHinh: CauHinh },
     cauTruc: cauTruc
   };
 })();

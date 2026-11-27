@@ -66,7 +66,9 @@ var SoDo = (function () {
     ref('chaChiTieu', 'Thuộc chỉ tiêu cha', 'DM_ChiTieu'), sel('linhVucLon', 'Lĩnh vực lớn', LINH_VUC_LON), sel('thuocTinhTongHop', 'Thuộc tính tổng hợp', THUOC_TINH_TONG_HOP),
     sel('capDuLieu', 'Cấp dữ liệu', CAP_DU_LIEU), c('kyBaoCaoXa', 'Kỳ báo cáo cấp xã'),
     ta('khaiNiemPhuongPhapTinh', '1. Khái niệm, phương pháp tính'), ta('phanToChuYeu', '2. Phân tổ chủ yếu'), c('kyCongBo', '3. Kỳ công bố'),
-    ta('nguonSoLieuNoiDung', '4. Nguồn số liệu'), ta('coQuanChuTriThuThap', '5. Cơ quan thu thập, tổng hợp — Chủ trì'), ta('coQuanPhoiHopThuThap', '5. Cơ quan thu thập, tổng hợp — Phối hợp')
+    ta('nguonSoLieuNoiDung', '4. Nguồn số liệu'), ta('coQuanChuTriThuThap', '5. Cơ quan thu thập, tổng hợp — Chủ trì'), ta('coQuanPhoiHopThuThap', '5. Cơ quan thu thập, tổng hợp — Phối hợp'),
+    // Tử số / mẫu số (27/11/2026): cách tính giá trị, dùng cho màn nhập số liệu kỳ ở giai đoạn 3
+    ref('loaiGiaTri', 'Loại giá trị', 'DM_LoaiGiaTri'), ta('dinhNghiaTuSo', 'Tử số là gì'), ta('dinhNghiaMauSo', 'Mẫu số là gì'), so('heSoNhan', 'Hệ số nhân')
   ]));
 
   bang('DM_ChiSo', DM, 'danhmuc', 'CS', 'TU_NHAP', 'KPI, chỉ số đánh giá', [
@@ -156,6 +158,11 @@ var SoDo = (function () {
   ]);
 
   // ===== DANH MỤC ĐỊA PHƯƠNG =====
+  // Loại giá trị của chỉ tiêu (tỷ lệ có tử/mẫu, tốc độ, số tuyệt đối, xếp hạng...). Danh mục mở: quản trị thêm loại khi cần.
+  bang('DM_LoaiGiaTri', DM, 'danhmuc', 'LGT', 'TU_NHAP', 'Loại giá trị chỉ tiêu', [
+    kc('maLoaiGiaTri', 'Mã loại giá trị'), bb('tenLoaiGiaTri', 'Tên loại giá trị'), c('coTuSoMauSo', 'Có tử số và mẫu số', 'boolean', { macDinh: false }),
+    so('heSoNhanMacDinh', 'Hệ số nhân mặc định'), ta('ghiChu', 'Ghi chú')
+  ]);
   bang('DM_BoChiTieu', DM, 'danhmuc', 'BO', 'TU_NHAP', 'Bộ chỉ tiêu', [
     kc('maBo', 'Mã bộ'), bb('tenBo', 'Tên bộ chỉ tiêu'), bb('loaiHeThong', 'Loại hệ thống', 'select', { tuyChon: LOAI_HE_THONG }),
     ref('vanBanBanHanh', 'Văn bản ban hành', 'DM_VanBan'), c('soKyHieuVanBan', 'Số ký hiệu văn bản'), c('coQuanBanHanh', 'Cơ quan ban hành'),
@@ -247,7 +254,8 @@ var SoDo = (function () {
     c('kyBaoCaoTP', 'Kỳ báo cáo cấp Thành phố'), c('kyBaoCaoXa', 'Kỳ báo cáo cấp xã'), c('thoiDiemChotSoLieu', 'Thời điểm chốt số liệu'),
     c('mucTieu', 'Mục tiêu theo giai đoạn', 'json'), c('viTriTrongVanBan', 'Vị trí trong văn bản'), ta('canCuNguyenVan', 'Căn cứ (nguyên văn)'), ta('coQuanXacNhanSoLieu', 'Cơ quan xác nhận số liệu'),
     ref('maChiTieu', 'Chỉ tiêu chuẩn (cùng nội hàm)', 'DM_ChiTieu'), sel('linhVucLon', 'Lĩnh vực lớn', LINH_VUC_LON),
-    sel('tinhTrangHieuLuc', 'Tình trạng hiệu lực', ['Còn hiệu lực', 'Hết hiệu lực'], { macDinh: 'Còn hiệu lực' }), ref('biThayTheBoi', 'Bị thay thế bởi', 'ChiTieu_TrongBo'), ta('ghiChu', 'Ghi chú')
+    sel('tinhTrangHieuLuc', 'Tình trạng hiệu lực', ['Còn hiệu lực', 'Hết hiệu lực'], { macDinh: 'Còn hiệu lực' }), ref('biThayTheBoi', 'Bị thay thế bởi', 'ChiTieu_TrongBo'), ta('ghiChu', 'Ghi chú'),
+    ref('loaiGiaTri', 'Loại giá trị', 'DM_LoaiGiaTri'), ta('dinhNghiaTuSo', 'Tử số là gì'), ta('dinhNghiaMauSo', 'Mẫu số là gì'), so('heSoNhan', 'Hệ số nhân')
   ]);
   bang('ChiTieu_PhanCong', DL, 'nghiepvu', 'PC', 'SO-4', 'Phân công nhập số liệu chỉ tiêu', [
     kc('maPhanCong', 'Mã'), bb('maChiTieu', 'Mã chỉ tiêu', 'ref', { thamChieu: 'DM_ChiTieu' }), c('tenChiTieu', 'Tên chỉ tiêu'), sel('nhomDauMoiNhap', 'Nhóm đầu mối nhập', ['DV', 'TH', 'AP', 'XA']),

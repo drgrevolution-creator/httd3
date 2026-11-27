@@ -79,3 +79,21 @@ test('1b: DM_BoChiTieu bốn loại hệ thống; DM_ChiTieu có cột mới tr�
   assert.ok(ks.indexOf('coQuanPhoiHopThuThap') < ks.indexOf('maThanhPho'), 'cột mới phải đứng trước cột hệ thống');
   assert.ok(SoDo.cot('DM_ChiTieu', 'linhVucLon').tuyChon.includes('Thông tin chung'));
 });
+
+test('tử/mẫu: DM_LoaiGiaTri đúng 5 cột; bốn cột mới ở ChiTieu_TrongBo và DM_ChiTieu là bốn cột cuối trước cột hệ thống', () => {
+  const { SoDo } = taiThuan();
+  const b = SoDo.BANG.DM_LoaiGiaTri;
+  assert.ok(b, 'thiếu DM_LoaiGiaTri');
+  assert.equal(b.nhom, 'danhmuc'); assert.equal(b.file, 'HTTD3_DanhMuc'); assert.equal(b.tienToMa, 'LGT'); assert.equal(b.dinhDangMa, 'TU_NHAP');
+  assert.deepEqual(b.cot.filter((c) => !c.heThong).map((c) => c.khoa), ['maLoaiGiaTri', 'tenLoaiGiaTri', 'coTuSoMauSo', 'heSoNhanMacDinh', 'ghiChu']);
+  assert.equal(SoDo.cot('DM_LoaiGiaTri', 'coTuSoMauSo').kieu, 'boolean'); assert.equal(SoDo.cot('DM_LoaiGiaTri', 'heSoNhanMacDinh').kieu, 'number');
+  const MOI = ['loaiGiaTri', 'dinhNghiaTuSo', 'dinhNghiaMauSo', 'heSoNhan'];
+  for (const t of ['ChiTieu_TrongBo', 'DM_ChiTieu']) {
+    const nd = SoDo.BANG[t].cot.filter((c) => !c.heThong).map((c) => c.khoa);
+    assert.deepEqual(nd.slice(-4), MOI, t);
+    assert.equal(SoDo.cot(t, 'loaiGiaTri').thamChieu, 'DM_LoaiGiaTri');
+    assert.equal(SoDo.cot(t, 'heSoNhan').kieu, 'number');
+    assert.equal(SoDo.cot(t, 'dinhNghiaTuSo').kieu, 'textarea');
+    assert.equal(SoDo.cot(t, 'dinhNghiaTuSo').ten, 'Tử số là gì');
+  }
+});

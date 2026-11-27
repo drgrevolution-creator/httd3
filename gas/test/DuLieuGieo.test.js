@@ -54,3 +54,15 @@ test('1b: gieo năm bộ chỉ tiêu', () => {
   assert.equal(DuLieuGieo.BANG.DM_BoChiTieu.find((b) => b.maBo === 'LUAT-TK').loaiHeThong, 'Quốc gia');
   assert.equal(DuLieuGieo.BANG.DM_BoChiTieu.find((b) => b.maBo === 'TU-699').loaiHeThong, 'Theo dõi, đánh giá');
 });
+
+test('tử/mẫu: gieo đúng 4 loại giá trị', () => {
+  const { DuLieuGieo } = taiThuan();
+  const ds = DuLieuGieo.BANG.DM_LoaiGiaTri;
+  assert.deepEqual(ds.map((r) => r.maLoaiGiaTri), ['TY_LE', 'TOC_DO', 'SO_TUYET_DOI', 'XEP_HANG']);
+  const t = ds[0];
+  assert.equal(t.tenLoaiGiaTri, 'Tỷ lệ (tử số/mẫu số)'); assert.equal(t.coTuSoMauSo, true); assert.equal(t.heSoNhanMacDinh, 100);
+  assert.equal(ds[1].tenLoaiGiaTri, 'Tốc độ, chỉ số nhận từ cơ quan khác'); assert.equal(ds[2].tenLoaiGiaTri, 'Số tuyệt đối'); assert.equal(ds[3].tenLoaiGiaTri, 'Xếp hạng, điểm số');
+  for (const r of ds.slice(1)) { assert.equal(r.coTuSoMauSo, false); assert.ok(r.heSoNhanMacDinh === undefined || r.heSoNhanMacDinh === ''); }
+  const thu = Object.keys(DuLieuGieo.BANG);
+  assert.ok(thu.indexOf('DM_LoaiGiaTri') >= 0);
+});

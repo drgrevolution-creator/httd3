@@ -324,3 +324,33 @@ test('soát 4: chiTieu.doc trả danh sách chỉ tiêu chuẩn kèm số bộ',
   assert.equal(b.soBo, 1);
   assert.equal(a.khaiNiemPhuongPhapTinh, undefined, 'danh sách không kèm năm trường');
 });
+
+// ---------- Tử số / mẫu số ----------
+const COT_TU_MAU = ['loaiGiaTri', 'dinhNghiaTuSo', 'dinhNghiaMauSo', 'heSoNhan'];
+test('tử/mẫu: thiết lập lại chèn 4 cột vào ChiTieu_TrongBo và DM_ChiTieu đã có dữ liệu kiểu 1b, gieo DM_LoaiGiaTri', () => {
+  const { ctx } = quanTri();
+  const gio = '2026-11-20T08:00:00+07:00';
+  const he = { taoLuc: gio, taoBoi: 'qt@gmail.com', capNhatLuc: gio, capNhatBoi: 'qt@gmail.com', tinhTrang: 'Hoạt động' };
+  const dung = {
+    ChiTieu_TrongBo: Object.assign({ maTrongBo: 'TU-699:1', maBo: 'TU-699', maGoc: '1', tenNguyenVan: 'Diện tích', tinhTrangHieuLuc: 'Còn hiệu lực' }, he),
+    DM_ChiTieu: Object.assign({ maChiTieu: 'CT-1', tenChiTieu: 'Chỉ tiêu một' }, he)
+  };
+  for (const t of Object.keys(dung)) {
+    const cu = ctx.SoDo.BANG[t].cot.filter((c) => !COT_TU_MAU.includes(c.khoa));
+    ctx.KhoDuLieu._sheet(t).rows = [cu.map((c) => c.khoa), cu.map((c) => c.ten), cu.map((c) => dung[t][c.khoa] ?? '')];
+  }
+  const ssDM = ctx.KhoDuLieu._ss('HTTD3_DanhMuc'), cuLGT = ssDM.getSheetByName('DM_LoaiGiaTri');
+  if (cuLGT) ssDM.deleteSheet(cuLGT);
+  const bc = ctx.ThietLap.thietLapLanDau({ emailQuanTri: 'qt@gmail.com', hoTenQuanTri: 'QT' });
+  for (const t of Object.keys(dung)) {
+    const sh = ctx.KhoDuLieu._sheet(t), cot = ctx.SoDo.BANG[t].cot;
+    assert.deepEqual(sh.rows[0].slice(0, cot.length), cot.map((c) => c.khoa), t + ': ' + bc.join(' | '));
+    ctx.KhoDuLieu._xoaCache(t);
+  }
+  const r = ctx.KhoDuLieu.timDong('ChiTieu_TrongBo', 'TU-699:1');
+  assert.equal(r.tenNguyenVan, 'Diện tích'); assert.equal(r.tinhTrangHieuLuc, 'Còn hiệu lực'); assert.equal(r.taoLuc, gio); assert.equal(r.loaiGiaTri, '');
+  assert.equal(ctx.KhoDuLieu.timDong('DM_ChiTieu', 'CT-1').tenChiTieu, 'Chỉ tiêu một');
+  ctx.KhoDuLieu._xoaCache('DM_LoaiGiaTri');
+  assert.equal(ctx.KhoDuLieu.docBang('DM_LoaiGiaTri').length, 4);
+  const kt = ctx.ThietLap.kiemTraThietLap({ tieuDe: true }).thieu; assert.equal(kt.length, 0, kt.join(', '));
+});
